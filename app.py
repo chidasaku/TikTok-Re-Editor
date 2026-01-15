@@ -2,14 +2,10 @@ import streamlit as st
 import os
 import tempfile
 import base64
-from dotenv import load_dotenv
 from utils.transcription import GladiaAPI
 from utils.text_formatter import GeminiFormatter
 from utils.voicevox import VoiceVoxAPI
 from utils.video_generator_ffmpeg import VideoGeneratorFFmpeg
-
-# 環境変数を読み込み
-load_dotenv()
 
 # ページ設定
 st.set_page_config(
@@ -379,27 +375,66 @@ if 'video_transparent' not in st.session_state:
 if 'audio_text' not in st.session_state:
     st.session_state.audio_text = None  # 音声生成時のテキストを保存
 
+# APIキー用セッションステート（入力値をセッション中保持）
+if 'gladia_api_key' not in st.session_state:
+    st.session_state.gladia_api_key = ""
+if 'gemini_api_key' not in st.session_state:
+    st.session_state.gemini_api_key = ""
+if 'voicevox_url' not in st.session_state:
+    st.session_state.voicevox_url = "http://localhost:50021"
+
 # API設定（折りたたみ式）- タイトルの上に配置
-with st.expander("⚙️ API設定", expanded=False):
-    # プレースホルダーテキストは空白として扱う
-    env_gladia = os.getenv("GLADIA_API_KEY", "")
-    if env_gladia == "ここに貼り付け":
-        env_gladia = ""
-    env_gemini = os.getenv("GEMINI_API_KEY", "")
-    if env_gemini == "ここに貼り付け":
-        env_gemini = ""
-    env_voicevox = os.getenv("VOICEVOX_API_URL", "http://localhost:50021")
+with st.expander("⚙️ API設定（初回は必ず開いて設定してください）", expanded=False):
+    st.markdown("### 🔑 あなたのAPIキーを入力してください")
+    st.markdown("※ APIキーは入力後、このセッション中のみ保持されます（サーバーには保存されません）")
 
     col1, col2 = st.columns(2)
     with col1:
-        gladia_api_key = st.text_input("🎤 Gladia API Key", value=env_gladia, type="password")
-        st.markdown('<a href="https://www.gladia.io/" target="_blank" style="color: #00f2ea; font-size: 12px;">→ Gladia APIキーを取得</a>', unsafe_allow_html=True)
+        gladia_input = st.text_input(
+            "🎤 Gladia API Key（動画文字起こし用）",
+            value=st.session_state.gladia_api_key,
+            type="password",
+            key="gladia_input"
+        )
+        if gladia_input != st.session_state.gladia_api_key:
+            st.session_state.gladia_api_key = gladia_input
+        st.markdown('<a href="https://www.gladia.io/" target="_blank" style="color: #00f2ea; font-size: 12px;">→ Gladia APIキーを取得（無料枠あり）</a>', unsafe_allow_html=True)
     with col2:
-        gemini_api_key = st.text_input("✨ Gemini API Key", value=env_gemini, type="password")
-        st.markdown('<a href="https://aistudio.google.com/apikey" target="_blank" style="color: #00f2ea; font-size: 12px;">→ Gemini APIキーを取得</a>', unsafe_allow_html=True)
+        gemini_input = st.text_input(
+            "✨ Gemini API Key（テキスト整形用）",
+            value=st.session_state.gemini_api_key,
+            type="password",
+            key="gemini_input"
+        )
+        if gemini_input != st.session_state.gemini_api_key:
+            st.session_state.gemini_api_key = gemini_input
+        st.markdown('<a href="https://aistudio.google.com/apikey" target="_blank" style="color: #00f2ea; font-size: 12px;">→ Gemini APIキーを取得（無料）</a>', unsafe_allow_html=True)
 
-    voicevox_url = st.text_input("🎙️ VOICEVOX URL", value=env_voicevox)
-    st.markdown('💡 テキストファイルから生成する場合、Gladia/Gemini APIは不要です')
+    st.markdown("---")
+    st.markdown("### 🎙️ VOICEVOX設定（音声合成）")
+    st.markdown("""
+    **VOICEVOXはあなたのパソコンで動かす必要があります：**
+    1. [VOICEVOX公式サイト](https://voicevox.hiroshiba.jp/)からダウンロード・インストール
+    2. VOICEVOXアプリを起動（起動するとローカルサーバーが立ち上がります）
+    3. 下のURLはそのままでOK（デフォルト: `http://localhost:50021`）
+    """)
+
+    voicevox_input = st.text_input(
+        "🎙️ VOICEVOX URL",
+        value=st.session_state.voicevox_url,
+        key="voicevox_input",
+        help="VOICEVOXを起動すると http://localhost:50021 で接続できます"
+    )
+    if voicevox_input != st.session_state.voicevox_url:
+        st.session_state.voicevox_url = voicevox_input
+
+    st.markdown("---")
+    st.info('💡 **テキスト入力から生成する場合**、Gladia/Gemini APIは不要です。VOICEVOXのみで動作します。')
+
+# セッションステートから値を取得
+gladia_api_key = st.session_state.gladia_api_key
+gemini_api_key = st.session_state.gemini_api_key
+voicevox_url = st.session_state.voicevox_url
 
 # タイトル
 st.markdown('<h1 translate="no">🎬 TikTok Re-Editor</h1>', unsafe_allow_html=True)
