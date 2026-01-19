@@ -396,8 +396,73 @@ if 'rephrased_result' not in st.session_state:
 if 'hiragana_text' not in st.session_state:
     st.session_state.hiragana_text = None  # ひらがな変換テキスト（音声生成用）
 
+# APIキーをセッションステートで管理（localStorage連携用）
+if 'api_keys_loaded' not in st.session_state:
+    st.session_state.api_keys_loaded = False
+if 'saved_gladia_key' not in st.session_state:
+    st.session_state.saved_gladia_key = ""
+if 'saved_gemini_key' not in st.session_state:
+    st.session_state.saved_gemini_key = ""
+
+# localStorage からAPIキーを読み込むJavaScript
+api_key_loader_js = """
+<script>
+(function() {
+    // localStorageからAPIキーを読み込み
+    const gladiaKey = localStorage.getItem('tiktok_re_editor_gladia_key') || '';
+    const geminiKey = localStorage.getItem('tiktok_re_editor_gemini_key') || '';
+
+    // Streamlitの入力フィールドに値を設定（ページ読み込み後）
+    function setInputValues() {
+        const inputs = document.querySelectorAll('input[type="password"]');
+        inputs.forEach((input, idx) => {
+            if (idx === 0 && gladiaKey && !input.value) {
+                // Gladia API Key
+                input.value = gladiaKey;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            } else if (idx === 1 && geminiKey && !input.value) {
+                // Gemini API Key
+                input.value = geminiKey;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        });
+    }
+
+    // 入力フィールドの変更を監視してlocalStorageに保存
+    function setupAutoSave() {
+        const inputs = document.querySelectorAll('input[type="password"]');
+        inputs.forEach((input, idx) => {
+            input.addEventListener('change', () => {
+                if (idx === 0) {
+                    localStorage.setItem('tiktok_re_editor_gladia_key', input.value);
+                    console.log('Gladia API Key saved to localStorage');
+                } else if (idx === 1) {
+                    localStorage.setItem('tiktok_re_editor_gemini_key', input.value);
+                    console.log('Gemini API Key saved to localStorage');
+                }
+            });
+        });
+    }
+
+    // 少し待ってから実行（Streamlitのレンダリング完了後）
+    setTimeout(() => {
+        setInputValues();
+        setupAutoSave();
+    }, 1000);
+
+    // 保存状態を表示
+    if (gladiaKey || geminiKey) {
+        console.log('API Keys loaded from localStorage');
+    }
+})();
+</script>
+"""
+
 # API設定（折りたたみ式）- タイトルの上に配置
 with st.expander("⚙️ API設定", expanded=False):
+    # localStorageからの読み込みスクリプトを埋め込む
+    components.html(api_key_loader_js, height=0)
+
     # Streamlit Cloud secrets または 環境変数 または 手動入力
     def get_secret(key, default=""):
         # 1. Streamlit secrets (Cloud)
@@ -416,12 +481,14 @@ with st.expander("⚙️ API設定", expanded=False):
     env_gemini = get_secret("GEMINI_API_KEY", "")
     env_voicevox = get_secret("VOICEVOX_API_URL", "http://localhost:50021")
 
+    st.success("💾 APIキーはブラウザに自動保存されます（次回から入力不要）")
+
     col1, col2 = st.columns(2)
     with col1:
-        gladia_api_key = st.text_input("🎤 Gladia API Key", value=env_gladia, type="password")
+        gladia_api_key = st.text_input("🎤 Gladia API Key", value=env_gladia, type="password", key="gladia_input")
         st.markdown('<a href="https://www.gladia.io/" target="_blank" style="color: #00f2ea; font-size: 12px;">→ Gladia APIキーを取得</a>', unsafe_allow_html=True)
     with col2:
-        gemini_api_key = st.text_input("✨ Gemini API Key", value=env_gemini, type="password")
+        gemini_api_key = st.text_input("✨ Gemini API Key", value=env_gemini, type="password", key="gemini_input")
         st.markdown('<a href="https://aistudio.google.com/apikey" target="_blank" style="color: #00f2ea; font-size: 12px;">→ Gemini APIキーを取得</a>', unsafe_allow_html=True)
 
     voicevox_url = st.text_input(
