@@ -432,8 +432,40 @@ with st.expander("⚙️ API設定", expanded=False):
     💡 **ヒント**
     - テキストファイルから生成する場合、Gladia APIは不要です
     - VoiceVoxはローカルPCで起動してください
-    - Web版でVoiceVoxを使う場合は[ngrok](https://ngrok.com/)でURLを公開してください
     """)
+
+    # Web版でのVOICEVOX使用方法の詳細説明
+    with st.expander("🌐 Web版でVOICEVOXを使う方法", expanded=False):
+        st.markdown("""
+        **Web版（Streamlit Cloud）でVOICEVOXを使う場合、以下の設定が必要です：**
+
+        ### なぜ設定が必要？
+        Web版アプリはクラウドサーバーで動作するため、あなたのPCで起動しているVOICEVOX（localhost:50021）に直接アクセスできません。
+        ngrokを使ってVOICEVOXをインターネットに公開する必要があります。
+
+        ### 設定手順
+
+        **Step 1: VOICEVOXを起動**
+        - PCでVOICEVOXアプリを起動（デフォルトで http://localhost:50021 で動作）
+
+        **Step 2: ngrokをインストール**
+        - https://ngrok.com/ でアカウント作成（無料）
+        - ngrokをダウンロード・インストール
+
+        **Step 3: ngrokでVOICEVOXを公開**
+        ```
+        ngrok http 50021
+        ```
+        - 実行すると `https://xxxx-xx-xx-xxx-xxx.ngrok-free.app` のようなURLが表示される
+
+        **Step 4: URLを設定**
+        - 上の「VOICEVOX URL」欄にngrokのURL（https://xxxx.ngrok-free.app）を入力
+
+        ### 注意事項
+        - ngrok無料版はセッションが8時間で切れます
+        - VOICEVOXとngrokは両方起動したままにしてください
+        - ngrokを使わない場合、音声合成機能は使用できません（文字起こし・テキスト整形は可能）
+        """)
 
 # タイトル
 st.markdown('<h1 translate="no">🎬 TikTok Re-Editor</h1>', unsafe_allow_html=True)
@@ -813,7 +845,22 @@ if st.session_state.formatted_text:
 
     else:
         st.error("⚠️ VOICEVOXに接続できません")
-        st.warning("VOICEVOXアプリを起動してください: https://voicevox.hiroshiba.jp/")
+        st.markdown("""
+        **接続方法を確認してください：**
+
+        **ローカル環境（自分のPC）の場合：**
+        1. [VOICEVOX](https://voicevox.hiroshiba.jp/)をダウンロード・起動
+        2. VOICEVOX URLは `http://localhost:50021` のまま
+
+        **Web版（Streamlit Cloud）の場合：**
+        1. PCでVOICEVOXを起動
+        2. [ngrok](https://ngrok.com/)をインストール
+        3. ターミナルで `ngrok http 50021` を実行
+        4. 表示されたURL（https://xxxx.ngrok-free.app）を上の「VOICEVOX URL」欄に入力
+        5. ページをリロード
+
+        詳しくは「⚙️ API設定」→「🌐 Web版でVOICEVOXを使う方法」をご覧ください。
+        """)
 
     # セクション4: 動画生成（音声生成後に表示）
     if st.session_state.generated_audio:
