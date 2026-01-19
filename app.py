@@ -1275,114 +1275,426 @@ if st.session_state.formatted_text:
     - 他の人のPCに依存しません
     """)
 
-    # セクション4: 動画生成（Web版では制限あり）
+    # セクション4: 動画生成（クライアントサイド - FFmpeg.wasm）
     st.header("🎬 4. 動画生成")
 
-    st.warning("""
-    ⚠️ **動画生成はローカル環境でのみ利用可能です**
+    st.info("💡 **動画生成もブラウザ内で完結します。** 音声生成後に動画を生成できます。")
 
-    Web版（Streamlit Cloud）では、動画生成機能は利用できません。
-    動画を生成したい場合は、配布パッケージをダウンロードしてローカルで実行してください。
+    # 表示用テキスト（句読点を削除）
+    display_lines_raw = [line.strip() for line in voice_text.strip().split('\n') if line.strip()]
+    display_lines = [line.replace('、', '').replace('。', '').replace('，', '').replace('．', '') for line in display_lines_raw]
+    display_text_for_video = '\\n'.join(display_lines)
 
-    **Web版でできること：**
-    - 文字起こし・テキスト整形 ✅
-    - 音声合成（各自のPCのVOICEVOX使用） ✅
-    - SNSコンテンツ生成 ✅
+    total_clips = len(display_lines)
+    st.info(f"📊 生成されるクリップ数: **{total_clips}クリップ**")
 
-    **ローカル版が必要：**
-    - 透過動画生成
+    # クライアントサイド動画生成 JavaScript コンポーネント
+    video_gen_js = """
+    <style>
+        .video-gen-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            border: 2px solid #fe2c55;
+        }
+        .video-gen-btn {
+            background: #000;
+            color: #fff;
+            border: 2px solid #fe2c55;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .video-gen-btn:hover:not(:disabled) {
+            background: #1a1a1a;
+            box-shadow: 0 0 20px rgba(254, 44, 85, 0.8);
+        }
+        .video-gen-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .video-gen-btn.generating {
+            background: #fe2c55;
+            color: #fff;
+        }
+        .video-gen-status {
+            color: #fff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .video-gen-status.error {
+            background: rgba(254, 44, 85, 0.3);
+            border: 1px solid #fe2c55;
+        }
+        .video-gen-status.success {
+            background: rgba(0, 242, 234, 0.3);
+            border: 1px solid #00f2ea;
+        }
+        .video-gen-status.info {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #666;
+        }
+        .video-gen-progress {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .video-gen-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #fe2c55, #00f2ea);
+            transition: width 0.3s;
+        }
+        .video-preview-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .video-preview {
+            max-width: 270px;
+            border-radius: 20px;
+            border: 3px solid #333;
+        }
+    </style>
+
+    <div class="video-gen-container">
+        <div id="video-gen-status" class="video-gen-status info">
+            ⏳ 音声を生成してから動画を作成できます
+        </div>
+
+        <div>
+            <button class="video-gen-btn" id="video-gen-btn">GENERATE VIDEO</button>
+            <button class="video-gen-btn" id="video-download-btn" style="display:none;">DOWNLOAD VIDEO (.webm)</button>
+        </div>
+
+        <div id="video-progress-container" style="display:none;">
+            <div class="video-gen-progress">
+                <div class="video-gen-progress-bar" id="video-progress-bar" style="width: 0%"></div>
+            </div>
+            <div id="video-progress-text" style="color: #fff; text-align: center;"></div>
+        </div>
+
+        <div id="video-preview-container" class="video-preview-container" style="display:none;">
+            <video id="video-preview" class="video-preview" controls playsinline></video>
+        </div>
+    </div>
+
+    <!-- FFmpeg.wasm -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/util.js"></script>
+
+    <script>
+    (function() {
+        const VOICEVOX_URL = 'http://localhost:50021';
+        const DISPLAY_TEXT = `""" + display_text_for_video + """`;
+        const AUDIO_TEXT = `""" + voice_text.replace('`', '\\`').replace('\n', '\\n') + """`;
+        const FILENAME = '""" + final_filename + """';
+        const WIDTH = 1080;
+        const HEIGHT = 1920;
+
+        const statusDiv = document.getElementById('video-gen-status');
+        const generateBtn = document.getElementById('video-gen-btn');
+        const downloadBtn = document.getElementById('video-download-btn');
+        const progressContainer = document.getElementById('video-progress-container');
+        const progressBar = document.getElementById('video-progress-bar');
+        const progressText = document.getElementById('video-progress-text');
+        const previewContainer = document.getElementById('video-preview-container');
+        const videoPreview = document.getElementById('video-preview');
+
+        let generatedVideoBlob = null;
+        let ffmpeg = null;
+
+        // 縦書きテキスト画像を生成
+        function createTextImage(text, isTransparent = false) {
+            const canvas = document.createElement('canvas');
+            canvas.width = WIDTH;
+            canvas.height = HEIGHT;
+            const ctx = canvas.getContext('2d');
+
+            // 背景
+            if (isTransparent) {
+                ctx.clearRect(0, 0, WIDTH, HEIGHT);
+            } else {
+                // チェッカーパターン
+                const cellSize = 20;
+                for (let y = 0; y < HEIGHT; y += cellSize) {
+                    for (let x = 0; x < WIDTH; x += cellSize) {
+                        ctx.fillStyle = ((x / cellSize + y / cellSize) % 2 === 0) ? '#c8c8c8' : '#969696';
+                        ctx.fillRect(x, y, cellSize, cellSize);
+                    }
+                }
+            }
+
+            // フォント設定
+            const fontSize = 100;
+            ctx.font = `bold ${fontSize}px "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // テキストの高さ計算
+            const charPitch = fontSize;
+            const totalHeight = charPitch * text.length;
+            const rectWidth = fontSize + 60;
+            const rectHeight = totalHeight + 60;
+            const rectX = (WIDTH - rectWidth) / 2;
+            const rectY = 288;
+
+            // 白い背景ボックス
+            ctx.fillStyle = 'white';
+            ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+
+            // 縦書きテキスト
+            ctx.fillStyle = 'black';
+            let yOffset = rectY + 30;
+            const xCenter = WIDTH / 2;
+
+            const verticalRotateChars = new Set(['ー', '〜', '～', '－', '-', '―', '‐', '–', '—']);
+            const smallChars = new Set(['っ', 'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ', 'ゃ', 'ゅ', 'ょ', 'ゎ',
+                                        'ッ', 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ', 'ャ', 'ュ', 'ョ', 'ヮ', 'ヶ', 'ヵ']);
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+
+                if (verticalRotateChars.has(char)) {
+                    // 長音記号は90度回転
+                    ctx.save();
+                    ctx.translate(xCenter, yOffset + fontSize / 2);
+                    ctx.rotate(Math.PI / 2);
+                    ctx.fillText(char, 0, -fontSize / 2);
+                    ctx.restore();
+                } else if (smallChars.has(char)) {
+                    // 小書き文字は右寄せ
+                    ctx.fillText(char, xCenter + 10, yOffset - 20);
+                    yOffset -= 20;
+                } else {
+                    ctx.fillText(char, xCenter, yOffset);
+                }
+                yOffset += charPitch;
+            }
+
+            return canvas;
+        }
+
+        // 音声生成
+        async function generateVoice(text, speakerId, speed, pauseLength) {
+            const queryRes = await fetch(VOICEVOX_URL + '/audio_query?text=' + encodeURIComponent(text) + '&speaker=' + speakerId, {
+                method: 'POST'
+            });
+            if (!queryRes.ok) throw new Error('audio_query failed');
+            const query = await queryRes.json();
+
+            query.speedScale = speed;
+            query.pauseLengthScale = pauseLength;
+
+            const synthRes = await fetch(VOICEVOX_URL + '/synthesis?speaker=' + speakerId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(query)
+            });
+            if (!synthRes.ok) throw new Error('synthesis failed');
+
+            return await synthRes.arrayBuffer();
+        }
+
+        // 音声の長さを取得（秒）
+        async function getAudioDuration(audioData) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await audioContext.decodeAudioData(audioData.slice(0));
+            return audioBuffer.duration;
+        }
+
+        // FFmpegを初期化
+        async function initFFmpeg() {
+            if (ffmpeg) return ffmpeg;
+
+            const { FFmpeg } = FFmpegWASM;
+            ffmpeg = new FFmpeg();
+
+            ffmpeg.on('progress', ({ progress }) => {
+                const pct = Math.round(progress * 100);
+                progressBar.style.width = pct + '%';
+            });
+
+            statusDiv.textContent = '🔄 FFmpegを読み込み中...';
+            await ffmpeg.load({
+                coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js',
+            });
+
+            return ffmpeg;
+        }
+
+        // 動画生成メイン処理
+        generateBtn.addEventListener('click', async () => {
+            const displayLines = DISPLAY_TEXT.split('\\n').filter(line => line.trim());
+            const audioLines = AUDIO_TEXT.split('\\n').filter(line => line.trim());
+
+            if (displayLines.length === 0) {
+                statusDiv.className = 'video-gen-status error';
+                statusDiv.textContent = '❌ テキストがありません';
+                return;
+            }
+
+            // スピーカーID等を取得（音声合成コンポーネントから）
+            const speakerSelect = document.querySelector('#style-select');
+            if (!speakerSelect || !speakerSelect.value) {
+                statusDiv.className = 'video-gen-status error';
+                statusDiv.textContent = '❌ 先に音声合成セクションでキャラクターを選択してください';
+                return;
+            }
+            const speakerId = parseInt(speakerSelect.value);
+            const speedSlider = document.querySelector('#speed-slider');
+            const pauseSlider = document.querySelector('#pause-slider');
+            const speed = speedSlider ? parseFloat(speedSlider.value) : 1.0;
+            const pauseLength = pauseSlider ? parseFloat(pauseSlider.value) : 1.0;
+
+            generateBtn.disabled = true;
+            generateBtn.classList.add('generating');
+            generateBtn.textContent = '生成中...';
+            progressContainer.style.display = 'block';
+            previewContainer.style.display = 'none';
+            downloadBtn.style.display = 'none';
+
+            try {
+                // FFmpeg初期化
+                await initFFmpeg();
+
+                const { fetchFile } = FFmpegUtil;
+                const segmentFiles = [];
+
+                // 各行の動画セグメントを作成
+                for (let i = 0; i < displayLines.length; i++) {
+                    const progress = ((i + 1) / displayLines.length) * 80;
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = `🎬 クリップ ${i + 1}/${displayLines.length} を生成中...`;
+
+                    const displayLine = displayLines[i];
+                    const audioLine = audioLines[i] || displayLine;
+
+                    // 1. 音声生成
+                    statusDiv.textContent = `🎙️ 音声生成中 (${i + 1}/${displayLines.length})...`;
+                    const audioData = await generateVoice(audioLine, speakerId, speed, pauseLength);
+                    const duration = await getAudioDuration(audioData);
+
+                    // 2. テキスト画像生成
+                    const canvas = createTextImage(displayLine, false);
+                    const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    const imageData = await imageBlob.arrayBuffer();
+
+                    // 3. FFmpegにファイルを書き込み
+                    await ffmpeg.writeFile(`image_${i}.png`, new Uint8Array(imageData));
+                    await ffmpeg.writeFile(`audio_${i}.wav`, new Uint8Array(audioData));
+
+                    // 4. セグメント動画を作成
+                    await ffmpeg.exec([
+                        '-loop', '1',
+                        '-framerate', '30',
+                        '-t', duration.toString(),
+                        '-i', `image_${i}.png`,
+                        '-i', `audio_${i}.wav`,
+                        '-c:v', 'libvpx-vp9',
+                        '-pix_fmt', 'yuva420p',
+                        '-c:a', 'libopus',
+                        '-b:a', '128k',
+                        '-shortest',
+                        `segment_${i}.webm`
+                    ]);
+
+                    segmentFiles.push(`segment_${i}.webm`);
+                }
+
+                // 連結リストを作成
+                progressText.textContent = '🔗 クリップを結合中...';
+                progressBar.style.width = '90%';
+
+                let concatList = '';
+                for (const file of segmentFiles) {
+                    concatList += `file '${file}'\\n`;
+                }
+                await ffmpeg.writeFile('concat.txt', concatList);
+
+                // 全セグメントを連結
+                await ffmpeg.exec([
+                    '-f', 'concat',
+                    '-safe', '0',
+                    '-i', 'concat.txt',
+                    '-c:v', 'libvpx-vp9',
+                    '-pix_fmt', 'yuva420p',
+                    '-c:a', 'libopus',
+                    'output.webm'
+                ]);
+
+                // 出力ファイルを取得
+                const outputData = await ffmpeg.readFile('output.webm');
+                generatedVideoBlob = new Blob([outputData.buffer], { type: 'video/webm' });
+
+                // プレビュー表示
+                const videoUrl = URL.createObjectURL(generatedVideoBlob);
+                videoPreview.src = videoUrl;
+                previewContainer.style.display = 'flex';
+                downloadBtn.style.display = 'inline-block';
+
+                progressBar.style.width = '100%';
+                progressText.textContent = '✅ 動画生成完了！';
+                statusDiv.className = 'video-gen-status success';
+                statusDiv.textContent = '✅ 動画生成完了！（WebM形式・透過対応）';
+
+                // クリーンアップ
+                for (let i = 0; i < displayLines.length; i++) {
+                    await ffmpeg.deleteFile(`image_${i}.png`);
+                    await ffmpeg.deleteFile(`audio_${i}.wav`);
+                    await ffmpeg.deleteFile(`segment_${i}.webm`);
+                }
+                await ffmpeg.deleteFile('concat.txt');
+                await ffmpeg.deleteFile('output.webm');
+
+            } catch (error) {
+                statusDiv.className = 'video-gen-status error';
+                statusDiv.textContent = '❌ 動画生成に失敗しました: ' + error.message;
+                console.error(error);
+            }
+
+            generateBtn.disabled = false;
+            generateBtn.classList.remove('generating');
+            generateBtn.textContent = 'GENERATE VIDEO';
+        });
+
+        // ダウンロード
+        downloadBtn.addEventListener('click', () => {
+            if (!generatedVideoBlob) return;
+
+            const url = URL.createObjectURL(generatedVideoBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = FILENAME + '.webm';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+    })();
+    </script>
+    """
+
+    components.html(video_gen_js, height=450)
+
+    st.markdown("""
+    **💡 動画生成について：**
+    - ブラウザ内で完結（FFmpeg.wasm使用）
+    - 出力形式: WebM（透過対応）
+    - 編集ソフトで背景合成可能
     """)
-
-    # ローカル実行時のみ動画生成を表示
-    if st.session_state.generated_audio:
-
-        # クリップ数を表示
-        video_gen = VideoGeneratorFFmpeg(
-            background_color=(0, 255, 0),
-            voicevox_url=voicevox_url
-        )
-        total_clips = video_gen.count_clips(st.session_state.text_editor)
-        st.info(f"📊 生成されるクリップ数: **{total_clips}クリップ**")
-
-        if st.button("GENERATE VIDEO", key="generate_video_btn"):
-            try:
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                clip_status = st.empty()
-
-                status_text.text("動画生成を準備中...")
-
-                # 進捗コールバック関数
-                def update_progress(current, total, message):
-                    # クリップ進捗（10%〜90%の範囲で表示）
-                    progress = int(10 + (current / total) * 80)
-                    progress_bar.progress(progress)
-                    clip_status.text(f"📹 {message}")
-
-                progress_bar.progress(5)
-
-                # 音声用テキスト（保存されていれば使用、なければ現在のテキスト）
-                audio_text = st.session_state.audio_text or st.session_state.text_editor
-                # 表示用テキスト（現在のテキストエディタの内容）
-                display_text = st.session_state.text_editor
-
-                # 常に透過動画を生成（プレビュー用チェッカー動画も同時生成）
-                video_transparent, video_preview = video_gen.create_green_screen_video(
-                    audio_text=audio_text,
-                    display_text=display_text,
-                    speaker_id=st.session_state.speaker_id,
-                    speed=st.session_state.speed,
-                    width=1080,
-                    height=1920,
-                    transparent=True,
-                    progress_callback=update_progress
-                )
-
-                progress_bar.progress(95)
-                clip_status.text("🔗 クリップを結合中...")
-
-                if video_transparent:
-                    st.session_state.generated_video = video_transparent
-                    st.session_state.preview_video = video_preview
-                    progress_bar.progress(100)
-                    status_text.text("✅ 動画生成完了！")
-                    clip_status.text(f"✅ 全 {total_clips} クリップの生成が完了しました")
-            except Exception as e:
-                st.error(f"動画生成エラー: {str(e)}")
-                import traceback
-                st.code(traceback.format_exc())
-
-        if st.session_state.generated_video and st.session_state.preview_video:
-            st.subheader("🎥 プレビュー")
-
-            # iPhone風フレームでプレビュー表示（カラムで中央配置）
-            col1, col2, col3 = st.columns([1, 1, 1])
-            with col2:
-                video_base64 = base64.b64encode(st.session_state.preview_video).decode()
-
-                st.markdown(f'''
-                <div class="iphone-frame">
-                    <div class="iphone-device">
-                        <div class="iphone-dynamic-island"></div>
-                        <div class="iphone-screen">
-                            <video controls playsinline>
-                                <source src="data:video/mp4;base64,{video_base64}" type="video/mp4">
-                            </video>
-                        </div>
-                        <div class="iphone-home-indicator"></div>
-                    </div>
-                </div>
-                ''', unsafe_allow_html=True)
-
-            st.info("💡 プレビューはチェッカー背景で表示。ダウンロードは透過動画（MOV）です。")
-
-            st.download_button(
-                label="DOWNLOAD VIDEO (.mov)",
-                data=st.session_state.generated_video,
-                file_name=f"{final_filename}.mov",
-                mime="video/quicktime",
-                key="download_video"
-            )
 
     # セクション5: SNSコンテンツ生成
     st.header("📋 5. タイトル・紹介文・ハッシュタグ生成")
