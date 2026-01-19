@@ -152,11 +152,40 @@ VOICEVOXは漢字や数字の読み方を間違えることがあります。
 
 ---
 
+## 🌐 Web版（Streamlit Cloud）で使う場合
+
+Web版でVOICEVOXを使うには、**ngrok**でローカルのVOICEVOXをインターネットに公開する必要があります。
+
+### 設定手順
+
+1. **VOICEVOXを起動** - PCでVOICEVOXアプリを起動
+
+2. **ngrokをインストール**
+   - https://ngrok.com/ でアカウント作成（無料）
+   - ngrokをダウンロード・インストール
+
+3. **ngrokでVOICEVOXを公開**
+   ```bash
+   ngrok http 50021
+   ```
+   実行すると `https://xxxx.ngrok-free.app` のようなURLが表示されます。
+
+4. **URLを設定**
+   - アプリの「⚙️ API設定」→「VOICEVOX URL」にngrokのURLを入力
+
+### 注意
+- ngrok無料版はセッションが8時間で切れます
+- VOICEVOXとngrokは両方起動したままにしてください
+- ngrokを使わない場合、文字起こし・テキスト整形のみ利用可能です
+
+---
+
 ## トラブルシューティング
 
 | エラー | 解決方法 |
 |--------|---------|
-| VOICEVOXに接続できません | VOICEVOXを起動してください |
+| VOICEVOXに接続できません（ローカル） | VOICEVOXを起動してください |
+| VOICEVOXに接続できません（Web版） | ngrokを設定してURLを入力してください |
 | ひらがな変換に失敗 | Gemini APIキーを確認 |
 | ffmpeg not found | インストールスクリプトを再実行 |
 
