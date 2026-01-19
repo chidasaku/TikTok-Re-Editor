@@ -1,7 +1,9 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import os
 import tempfile
 import base64
+import json
 from dotenv import load_dotenv
 from utils.transcription import GladiaAPI
 from utils.text_formatter import GeminiFormatter
@@ -431,40 +433,36 @@ with st.expander("⚙️ API設定", expanded=False):
     st.markdown("""
     💡 **ヒント**
     - テキストファイルから生成する場合、Gladia APIは不要です
-    - VoiceVoxはローカルPCで起動してください
+    - VoiceVoxは各自のPCで起動してください（ブラウザから直接接続します）
     """)
 
     # Web版でのVOICEVOX使用方法の詳細説明
     with st.expander("🌐 Web版でVOICEVOXを使う方法", expanded=False):
         st.markdown("""
-        **Web版（Streamlit Cloud）でVOICEVOXを使う場合、以下の設定が必要です：**
+        **Web版（Streamlit Cloud）でVOICEVOXを使う方法：**
 
-        ### なぜ設定が必要？
-        Web版アプリはクラウドサーバーで動作するため、あなたのPCで起動しているVOICEVOX（localhost:50021）に直接アクセスできません。
-        ngrokを使ってVOICEVOXをインターネットに公開する必要があります。
+        ### 新しい方式（ngrok不要！）
+        このアプリは、**ブラウザから直接あなたのPCのVOICEVOXに接続**します。
+        ngrokやCloudflare Tunnelは不要です。
 
         ### 設定手順
 
-        **Step 1: VOICEVOXを起動**
-        - PCでVOICEVOXアプリを起動（デフォルトで http://localhost:50021 で動作）
+        **Step 1: VOICEVOXをインストール**
+        - https://voicevox.hiroshiba.jp/ からダウンロード
+        - インストールして起動
 
-        **Step 2: ngrokをインストール**
-        - https://ngrok.com/ でアカウント作成（無料）
-        - ngrokをダウンロード・インストール
+        **Step 2: このアプリを開く**
+        - ブラウザでこのページを開く
+        - 音声合成セクションで「VOICEVOXに接続しました」と表示されればOK
 
-        **Step 3: ngrokでVOICEVOXを公開**
-        ```
-        ngrok http 50021
-        ```
-        - 実行すると `https://xxxx-xx-xx-xxx-xxx.ngrok-free.app` のようなURLが表示される
-
-        **Step 4: URLを設定**
-        - 上の「VOICEVOX URL」欄にngrokのURL（https://xxxx.ngrok-free.app）を入力
+        ### 仕組み
+        - ブラウザのJavaScriptがあなたのPC上のVOICEVOX（localhost:50021）に直接接続
+        - 音声データはあなたのPC内で処理されます
+        - サーバーを経由しないので、他の誰かのPCに依存しません
 
         ### 注意事項
-        - ngrok無料版はセッションが8時間で切れます
-        - VOICEVOXとngrokは両方起動したままにしてください
-        - ngrokを使わない場合、音声合成機能は使用できません（文字起こし・テキスト整形は可能）
+        - VOICEVOXは使用中は起動したままにしてください
+        - 動画生成機能はWeb版では利用できません（ローカル版をご利用ください）
         """)
 
 # タイトル
@@ -743,128 +741,493 @@ if st.session_state.formatted_text:
     # ファイル名入力
     final_filename = st.text_input("ファイル名（編集可能）", value=st.session_state.filename, key="filename_input")
 
-    # セクション3: VOICEVOX設定
+    # セクション3: VOICEVOX設定（クライアントサイド対応）
     st.header("🎙️ 3. 音声合成")
 
-    speakers = voicevox.get_speakers()
+    st.info("💡 **各自のPCでVOICEVOXを起動してください。** ブラウザから直接あなたのPCのVOICEVOXに接続します。")
 
-    if speakers:
-        speaker_names = [speaker.get("name", "") for speaker in speakers]
-
-        default_index = 0
-        if "青山龍星" in speaker_names:
-            default_index = speaker_names.index("青山龍星")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            selected_speaker_name = st.selectbox("🎭 キャラクター選択", speaker_names, index=default_index)
-
-        selected_speaker = next((s for s in speakers if s.get("name") == selected_speaker_name), None)
-
-        if selected_speaker:
-            styles = selected_speaker.get("styles", [])
-            style_names = [style.get("name", "") for style in styles]
-
-            with col2:
-                selected_style_name = st.selectbox("🎨 スタイル選択", style_names, index=0)
-
-            speaker_id = voicevox.find_speaker_id(speakers, selected_speaker_name, selected_style_name)
-
-            if st.button("PREVIEW", key="sample_btn"):
-                progress_bar = st.progress(0)
-                progress_bar.progress(30)
-                sample_audio = voicevox.generate_sample_voice(speaker_id)
-                if sample_audio:
-                    st.session_state.sample_audio = sample_audio
-                    progress_bar.progress(100)
-
-            if st.session_state.sample_audio:
-                st.audio(st.session_state.sample_audio, format="audio/wav")
-
-            speed_options = {"0.7x": 0.7, "0.8x": 0.8, "0.9x": 0.9, "1.0x（標準）": 1.0, "1.1x": 1.1, "1.2x": 1.2, "1.3x": 1.3}
-            selected_speed = st.selectbox("⚡ 話速", list(speed_options.keys()), index=3)
-            speed = speed_options[selected_speed]
-
-            pause_length = st.slider("⏸️ 間の長さ", min_value=0.0, max_value=2.0, value=1.0, step=0.1,
-                                     help="句読点での間の長さ（0.0=間なし、1.0=標準、2.0=長い間）")
-
-            # 生成される行数を表示
-            # ひらがなテキストがあればそれを使用、なければ通常テキストを使用
-            if st.session_state.hiragana_text and "hiragana_editor" in st.session_state:
-                voice_text = st.session_state.hiragana_editor
-                st.success("🔤 音声生成にはひらがなテキストを使用します")
-            else:
-                voice_text = st.session_state.text_editor
-                st.warning("⚠️ ひらがな変換されていません。整形テキストをそのまま使用します")
-            total_lines = len([line.strip() for line in voice_text.strip().split('\n') if line.strip()])
-            st.info(f"📊 生成される音声行数: **{total_lines}行**")
-
-            if st.button("GENERATE AUDIO", key="generate_btn"):
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-
-                # 進捗コールバック関数
-                def audio_progress_callback(current, total, message):
-                    progress = int((current / total) * 100)
-                    progress_bar.progress(progress)
-                    status_text.text(f"🎙️ {message}")
-
-                status_text.text("音声生成を開始...")
-                audio_data = voicevox.generate_voice_with_progress(
-                    voice_text,
-                    speaker_id,
-                    speed,
-                    pause_length,
-                    progress_callback=audio_progress_callback
-                )
-
-                if audio_data:
-                    st.session_state.generated_audio = audio_data
-                    st.session_state.speaker_id = speaker_id
-                    st.session_state.speed = speed
-                    st.session_state.pause_length = pause_length
-                    st.session_state.audio_text = voice_text  # 音声生成時のテキストを保存
-                    progress_bar.progress(100)
-                    status_text.text(f"✅ 全 {total_lines} 行の音声生成が完了しました")
-                else:
-                    status_text.text("❌ 音声生成に失敗しました")
-                    st.error("音声生成に失敗しました。VOICEVOXが起動しているか確認してください。")
-
-            if st.session_state.generated_audio:
-                st.subheader("🎧 生成された音声")
-                st.audio(st.session_state.generated_audio, format="audio/wav")
-
-                st.download_button(
-                    label="DOWNLOAD AUDIO",
-                    data=st.session_state.generated_audio,
-                    file_name=f"{final_filename}.wav",
-                    mime="audio/wav",
-                    key="download_audio"
-                )
-
+    # 音声生成用テキストを準備
+    if st.session_state.hiragana_text and "hiragana_editor" in st.session_state:
+        voice_text = st.session_state.hiragana_editor
+        st.success("🔤 音声生成にはひらがなテキストを使用します")
     else:
-        st.error("⚠️ VOICEVOXに接続できません")
-        st.markdown("""
-        **接続方法を確認してください：**
+        voice_text = st.session_state.text_editor
+        st.warning("⚠️ ひらがな変換されていません。整形テキストをそのまま使用します")
 
-        **ローカル環境（自分のPC）の場合：**
-        1. [VOICEVOX](https://voicevox.hiroshiba.jp/)をダウンロード・起動
-        2. VOICEVOX URLは `http://localhost:50021` のまま
+    total_lines = len([line.strip() for line in voice_text.strip().split('\n') if line.strip()])
+    st.info(f"📊 生成される音声行数: **{total_lines}行**")
 
-        **Web版（Streamlit Cloud）の場合：**
-        1. PCでVOICEVOXを起動
-        2. [ngrok](https://ngrok.com/)をインストール
-        3. ターミナルで `ngrok http 50021` を実行
-        4. 表示されたURL（https://xxxx.ngrok-free.app）を上の「VOICEVOX URL」欄に入力
-        5. ページをリロード
+    # クライアントサイドVOICEVOX JavaScript コンポーネント
+    voicevox_js = """
+    <style>
+        .voicevox-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            border: 2px solid #00f2ea;
+        }
+        .voicevox-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .voicevox-select {
+            flex: 1;
+            min-width: 200px;
+        }
+        .voicevox-select label {
+            display: block;
+            color: #fff;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .voicevox-select select {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            color: #fff;
+            border: 2px solid #00f2ea;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .voicevox-btn {
+            background: #000;
+            color: #fff;
+            border: 2px solid #00f2ea;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .voicevox-btn:hover:not(:disabled) {
+            background: #1a1a1a;
+            box-shadow: 0 0 20px rgba(0, 242, 234, 0.8);
+        }
+        .voicevox-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .voicevox-btn.generating {
+            background: #00f2ea;
+            color: #000;
+        }
+        .voicevox-status {
+            color: #fff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .voicevox-status.error {
+            background: rgba(254, 44, 85, 0.3);
+            border: 1px solid #fe2c55;
+        }
+        .voicevox-status.success {
+            background: rgba(0, 242, 234, 0.3);
+            border: 1px solid #00f2ea;
+        }
+        .voicevox-status.info {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #666;
+        }
+        .voicevox-progress {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .voicevox-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00f2ea, #fe2c55);
+            transition: width 0.3s;
+        }
+        .voicevox-audio {
+            width: 100%;
+            margin: 15px 0;
+        }
+        .voicevox-slider {
+            width: 100%;
+        }
+        .voicevox-slider input[type="range"] {
+            width: 100%;
+            accent-color: #00f2ea;
+        }
+    </style>
 
-        詳しくは「⚙️ API設定」→「🌐 Web版でVOICEVOXを使う方法」をご覧ください。
-        """)
+    <div class="voicevox-container">
+        <div id="voicevox-status" class="voicevox-status info">
+            🔄 VOICEVOXに接続中...
+        </div>
 
-    # セクション4: 動画生成（音声生成後に表示）
+        <div class="voicevox-row">
+            <div class="voicevox-select">
+                <label>🎭 キャラクター</label>
+                <select id="speaker-select" disabled>
+                    <option>読み込み中...</option>
+                </select>
+            </div>
+            <div class="voicevox-select">
+                <label>🎨 スタイル</label>
+                <select id="style-select" disabled>
+                    <option>-</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="voicevox-row">
+            <div class="voicevox-select voicevox-slider">
+                <label>⚡ 話速: <span id="speed-value">1.0</span>x</label>
+                <input type="range" id="speed-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+            </div>
+            <div class="voicevox-select voicevox-slider">
+                <label>⏸️ 間の長さ: <span id="pause-value">1.0</span></label>
+                <input type="range" id="pause-slider" min="0.0" max="2.0" step="0.1" value="1.0">
+            </div>
+        </div>
+
+        <div>
+            <button class="voicevox-btn" id="preview-btn" disabled>PREVIEW</button>
+            <button class="voicevox-btn" id="generate-btn" disabled>GENERATE AUDIO</button>
+        </div>
+
+        <div id="progress-container" style="display:none;">
+            <div class="voicevox-progress">
+                <div class="voicevox-progress-bar" id="progress-bar" style="width: 0%"></div>
+            </div>
+            <div id="progress-text" style="color: #fff; text-align: center;"></div>
+        </div>
+
+        <div id="audio-container" style="display:none;">
+            <audio id="audio-player" class="voicevox-audio" controls></audio>
+            <button class="voicevox-btn" id="download-btn">DOWNLOAD AUDIO</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const VOICEVOX_URL = 'http://localhost:50021';
+        const TEXT_TO_SPEAK = `""" + voice_text.replace('`', '\\`').replace('\n', '\\n') + """`;
+        const FILENAME = '""" + final_filename + """';
+
+        let speakers = [];
+        let currentSpeakerId = null;
+        let generatedAudioBlob = null;
+
+        const statusDiv = document.getElementById('voicevox-status');
+        const speakerSelect = document.getElementById('speaker-select');
+        const styleSelect = document.getElementById('style-select');
+        const speedSlider = document.getElementById('speed-slider');
+        const pauseSlider = document.getElementById('pause-slider');
+        const speedValue = document.getElementById('speed-value');
+        const pauseValue = document.getElementById('pause-value');
+        const previewBtn = document.getElementById('preview-btn');
+        const generateBtn = document.getElementById('generate-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const audioContainer = document.getElementById('audio-container');
+        const audioPlayer = document.getElementById('audio-player');
+        const downloadBtn = document.getElementById('download-btn');
+
+        // スライダーの値更新
+        speedSlider.addEventListener('input', () => {
+            speedValue.textContent = speedSlider.value;
+        });
+        pauseSlider.addEventListener('input', () => {
+            pauseValue.textContent = pauseSlider.value;
+        });
+
+        // VOICEVOXに接続してスピーカー一覧を取得
+        async function loadSpeakers() {
+            try {
+                const response = await fetch(VOICEVOX_URL + '/speakers');
+                if (!response.ok) throw new Error('接続失敗');
+                speakers = await response.json();
+
+                speakerSelect.innerHTML = '';
+                speakers.forEach((speaker, idx) => {
+                    const option = document.createElement('option');
+                    option.value = idx;
+                    option.textContent = speaker.name;
+                    if (speaker.name === '青山龍星') option.selected = true;
+                    speakerSelect.appendChild(option);
+                });
+
+                speakerSelect.disabled = false;
+                updateStyles();
+
+                statusDiv.className = 'voicevox-status success';
+                statusDiv.innerHTML = '✅ VOICEVOXに接続しました（あなたのPCで動作中）';
+
+                previewBtn.disabled = false;
+                generateBtn.disabled = false;
+
+            } catch (error) {
+                statusDiv.className = 'voicevox-status error';
+                statusDiv.innerHTML = `❌ VOICEVOXに接続できません<br><br>
+                    <strong>確認してください：</strong><br>
+                    1. あなたのPCでVOICEVOXを起動していますか？<br>
+                    2. VOICEVOXをダウンロード: <a href="https://voicevox.hiroshiba.jp/" target="_blank" style="color:#00f2ea;">https://voicevox.hiroshiba.jp/</a>`;
+            }
+        }
+
+        // スタイル一覧を更新
+        function updateStyles() {
+            const speakerIdx = speakerSelect.value;
+            const speaker = speakers[speakerIdx];
+            if (!speaker) return;
+
+            styleSelect.innerHTML = '';
+            speaker.styles.forEach(style => {
+                const option = document.createElement('option');
+                option.value = style.id;
+                option.textContent = style.name;
+                styleSelect.appendChild(option);
+            });
+            styleSelect.disabled = false;
+            currentSpeakerId = parseInt(styleSelect.value);
+        }
+
+        speakerSelect.addEventListener('change', updateStyles);
+        styleSelect.addEventListener('change', () => {
+            currentSpeakerId = parseInt(styleSelect.value);
+        });
+
+        // プレビュー音声生成
+        previewBtn.addEventListener('click', async () => {
+            previewBtn.disabled = true;
+            previewBtn.textContent = '生成中...';
+
+            try {
+                const audio = await generateVoice('こんにちは、VOICEVOXです。', currentSpeakerId, 1.0, 1.0);
+                if (audio) {
+                    const url = URL.createObjectURL(audio);
+                    const previewAudio = new Audio(url);
+                    previewAudio.play();
+                }
+            } catch (e) {
+                alert('プレビュー生成に失敗しました');
+            }
+
+            previewBtn.disabled = false;
+            previewBtn.textContent = 'PREVIEW';
+        });
+
+        // 音声生成
+        async function generateVoice(text, speakerId, speed, pauseLength) {
+            // audio_query
+            const queryRes = await fetch(VOICEVOX_URL + '/audio_query?text=' + encodeURIComponent(text) + '&speaker=' + speakerId, {
+                method: 'POST'
+            });
+            if (!queryRes.ok) throw new Error('audio_query failed');
+            const query = await queryRes.json();
+
+            query.speedScale = speed;
+            query.pauseLengthScale = pauseLength;
+
+            // synthesis
+            const synthRes = await fetch(VOICEVOX_URL + '/synthesis?speaker=' + speakerId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(query)
+            });
+            if (!synthRes.ok) throw new Error('synthesis failed');
+
+            return await synthRes.blob();
+        }
+
+        // WAVファイルを結合
+        async function concatenateWavBlobs(blobs) {
+            if (blobs.length === 0) return null;
+            if (blobs.length === 1) return blobs[0];
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffers = [];
+
+            for (const blob of blobs) {
+                const arrayBuffer = await blob.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                audioBuffers.push(audioBuffer);
+            }
+
+            // 合計の長さを計算
+            const totalLength = audioBuffers.reduce((sum, buf) => sum + buf.length, 0);
+            const sampleRate = audioBuffers[0].sampleRate;
+            const numberOfChannels = audioBuffers[0].numberOfChannels;
+
+            // 新しいバッファを作成
+            const outputBuffer = audioContext.createBuffer(numberOfChannels, totalLength, sampleRate);
+
+            let offset = 0;
+            for (const buffer of audioBuffers) {
+                for (let channel = 0; channel < numberOfChannels; channel++) {
+                    outputBuffer.getChannelData(channel).set(buffer.getChannelData(channel), offset);
+                }
+                offset += buffer.length;
+            }
+
+            // WAVに変換
+            return audioBufferToWavBlob(outputBuffer);
+        }
+
+        function audioBufferToWavBlob(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+            const dataLength = buffer.length * blockAlign;
+            const bufferLength = 44 + dataLength;
+
+            const arrayBuffer = new ArrayBuffer(bufferLength);
+            const view = new DataView(arrayBuffer);
+
+            // WAV header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, bufferLength - 8, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataLength, true);
+
+            // Write audio data
+            let offset = 44;
+            for (let i = 0; i < buffer.length; i++) {
+                for (let channel = 0; channel < numChannels; channel++) {
+                    const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+                    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                    offset += 2;
+                }
+            }
+
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        // メイン音声生成
+        generateBtn.addEventListener('click', async () => {
+            const lines = TEXT_TO_SPEAK.split('\\n').filter(line => line.trim());
+            if (lines.length === 0) {
+                alert('テキストがありません');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.classList.add('generating');
+            generateBtn.textContent = '生成中...';
+            progressContainer.style.display = 'block';
+            audioContainer.style.display = 'none';
+
+            const speed = parseFloat(speedSlider.value);
+            const pauseLength = parseFloat(pauseSlider.value);
+            const audioBlobs = [];
+
+            try {
+                for (let i = 0; i < lines.length; i++) {
+                    const progress = ((i + 1) / lines.length) * 100;
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = `🎙️ 行 ${i + 1}/${lines.length} を生成中...`;
+
+                    const blob = await generateVoice(lines[i], currentSpeakerId, speed, pauseLength);
+                    if (blob) {
+                        audioBlobs.push(blob);
+                    }
+                }
+
+                progressText.textContent = '🔗 音声を結合中...';
+
+                // 結合
+                generatedAudioBlob = await concatenateWavBlobs(audioBlobs);
+
+                if (generatedAudioBlob) {
+                    const url = URL.createObjectURL(generatedAudioBlob);
+                    audioPlayer.src = url;
+                    audioContainer.style.display = 'block';
+                    progressText.textContent = '✅ 音声生成完了！';
+                }
+
+            } catch (error) {
+                progressText.textContent = '❌ 音声生成に失敗しました: ' + error.message;
+            }
+
+            generateBtn.disabled = false;
+            generateBtn.classList.remove('generating');
+            generateBtn.textContent = 'GENERATE AUDIO';
+        });
+
+        // ダウンロード
+        downloadBtn.addEventListener('click', () => {
+            if (!generatedAudioBlob) return;
+
+            const url = URL.createObjectURL(generatedAudioBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = FILENAME + '.wav';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // 初期化
+        loadSpeakers();
+    })();
+    </script>
+    """
+
+    components.html(voicevox_js, height=500)
+
+    st.markdown("---")
+    st.markdown("""
+    **💡 この音声合成は、各自のPCで動作します：**
+    - VOICEVOXをインストール・起動してください
+    - ブラウザから直接あなたのPCの `localhost:50021` に接続します
+    - 他の人のPCに依存しません
+    """)
+
+    # セクション4: 動画生成（Web版では制限あり）
+    st.header("🎬 4. 動画生成")
+
+    st.warning("""
+    ⚠️ **動画生成はローカル環境でのみ利用可能です**
+
+    Web版（Streamlit Cloud）では、動画生成機能は利用できません。
+    動画を生成したい場合は、配布パッケージをダウンロードしてローカルで実行してください。
+
+    **Web版でできること：**
+    - 文字起こし・テキスト整形 ✅
+    - 音声合成（各自のPCのVOICEVOX使用） ✅
+    - SNSコンテンツ生成 ✅
+
+    **ローカル版が必要：**
+    - 透過動画生成
+    """)
+
+    # ローカル実行時のみ動画生成を表示
     if st.session_state.generated_audio:
-        st.header("🎬 4. 動画生成")
 
         # クリップ数を表示
         video_gen = VideoGeneratorFFmpeg(
