@@ -811,7 +811,360 @@ if st.session_state.formatted_text:
     # セクション3: VOICEVOX設定（クライアントサイド対応）
     st.header("🎙️ 3. 音声合成")
 
-    st.info("💡 **各自のPCでVOICEVOXを起動してください。** ブラウザから直接あなたのPCのVOICEVOXに接続します。")
+    # VOICEVOX接続テストセクション（目立つデザイン）
+    voicevox_test_js = """
+    <style>
+        .vv-test-container {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 25px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 15px;
+            border: 3px solid #00f2ea;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 242, 234, 0.3);
+        }
+        .vv-test-title {
+            color: #00f2ea;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0, 242, 234, 0.5);
+        }
+        .vv-test-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .vv-test-input-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        .vv-test-input-group label {
+            display: block;
+            color: #fff;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .vv-test-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: #000;
+            color: #fff;
+            border: 2px solid #00f2ea;
+            border-radius: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .vv-test-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 242, 234, 0.5);
+        }
+        .vv-test-btn {
+            background: linear-gradient(135deg, #00f2ea 0%, #00b4d8 100%);
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .vv-test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 242, 234, 0.5);
+        }
+        .vv-test-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .vv-test-btn.testing {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+        }
+        .vv-test-status {
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .vv-test-status.waiting {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed #666;
+            color: #aaa;
+        }
+        .vv-test-status.testing {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+            color: #ffd700;
+        }
+        .vv-test-status.success {
+            background: rgba(0, 242, 234, 0.2);
+            border: 2px solid #00f2ea;
+            color: #00f2ea;
+        }
+        .vv-test-status.error {
+            background: rgba(254, 44, 85, 0.2);
+            border: 2px solid #fe2c55;
+            color: #fe2c55;
+        }
+        .vv-test-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #ccc;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .vv-test-help {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #00f2ea;
+        }
+        .vv-test-help-title {
+            color: #00f2ea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .vv-test-help-list {
+            color: #ccc;
+            margin: 0;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+        .vv-test-help-list li {
+            margin-bottom: 10px;
+        }
+        .vv-test-help-list code {
+            background: rgba(0, 242, 234, 0.2);
+            color: #00f2ea;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .vv-test-help ul {
+            list-style-type: disc;
+        }
+        .vv-test-help-list a {
+            color: #00f2ea;
+            text-decoration: none;
+        }
+        .vv-test-help-list a:hover {
+            text-decoration: underline;
+        }
+        .vv-speaker-count {
+            display: inline-block;
+            background: #00f2ea;
+            color: #000;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+
+    <div class="vv-test-container">
+        <div class="vv-test-title">🔌 VOICEVOX 接続テスト</div>
+
+        <div class="vv-test-row">
+            <div class="vv-test-input-group">
+                <label>VOICEVOX URL（通常は変更不要）</label>
+                <input type="text" id="vv-url-input" class="vv-test-input" value="http://localhost:50021" placeholder="http://localhost:50021">
+            </div>
+            <button id="vv-test-btn" class="vv-test-btn">接続テスト</button>
+        </div>
+
+        <div id="vv-test-status" class="vv-test-status waiting">
+            ⏳ 「接続テスト」ボタンを押して、VOICEVOXとの接続を確認してください
+        </div>
+
+        <div id="vv-test-details" class="vv-test-details" style="display: none;"></div>
+
+        <div class="vv-test-help">
+            <div class="vv-test-help-title">📋 VOICEVOXの起動確認方法</div>
+            <ol class="vv-test-help-list">
+                <li><strong>Step 1: VOICEVOXアプリを起動する</strong><br>
+                    → まだの方は <a href="https://voicevox.hiroshiba.jp/" target="_blank">公式サイト</a> からダウンロード・インストール<br>
+                    → アプリを起動すると、エンジンも自動的に起動します</li>
+                <li><strong>Step 2: エンジンの起動を確認する</strong><br>
+                    → <strong>Windows:</strong> タスクバー（右下）に VOICEVOX のアイコンが表示されます<br>
+                    → <strong>Mac:</strong> メニューバー（右上）に VOICEVOX のアイコンが表示されます<br>
+                    → アイコンがあれば、エンジンは動作中です</li>
+                <li><strong>Step 3: ポート番号を確認する（VOICEVOX内で確認）</strong><br>
+                    → VOICEVOXアプリで <strong>⚙️ 設定</strong> → <strong>エンジン</strong> → <strong>ポート番号</strong><br>
+                    → デフォルトは <code>50021</code> です<br>
+                    → 変更している場合は、上の入力欄にそのポート番号を入力してください</li>
+                <li><strong>Step 4: ブラウザで直接確認する</strong><br>
+                    → <a href="http://localhost:50021/version" target="_blank">http://localhost:50021/version</a> を新しいタブで開く<br>
+                    → バージョン番号（例: <code>"0.20.0"</code>）が表示されれば正常です<br>
+                    → 「このサイトにアクセスできません」と出る場合はエンジンが起動していません</li>
+            </ol>
+        </div>
+
+        <div class="vv-test-help" style="margin-top: 15px; border-left-color: #fe2c55;">
+            <div class="vv-test-help-title" style="color: #fe2c55;">⚠️ よくあるトラブル</div>
+            <ul class="vv-test-help-list">
+                <li><strong>「接続が拒否されました」エラー</strong><br>
+                    → VOICEVOXアプリは起動しているが、エンジンが起動していない可能性<br>
+                    → アプリを再起動してみてください</li>
+                <li><strong>ポート番号が50021以外の場合</strong><br>
+                    → 上の入力欄に正しいURL（例: <code>http://localhost:50022</code>）を入力<br>
+                    → 「接続テスト」ボタンで確認</li>
+                <li><strong>HTTPS環境からの接続エラー（Mixed Content）</strong><br>
+                    → Streamlit Cloudなど HTTPS サイトから HTTP の localhost に接続できない場合があります<br>
+                    → ローカルで Streamlit を起動するか、VOICEVOXをサーバー設置することを検討してください</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const urlInput = document.getElementById('vv-url-input');
+        const testBtn = document.getElementById('vv-test-btn');
+        const statusDiv = document.getElementById('vv-test-status');
+        const detailsDiv = document.getElementById('vv-test-details');
+
+        // ローカルストレージから保存されたURLを復元
+        const savedUrl = localStorage.getItem('voicevox_url');
+        if (savedUrl) {
+            urlInput.value = savedUrl;
+        }
+
+        testBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim().replace(/\\/$/, ''); // 末尾のスラッシュを削除
+
+            // URLを保存
+            localStorage.setItem('voicevox_url', url);
+
+            testBtn.disabled = true;
+            testBtn.classList.add('testing');
+            testBtn.textContent = 'テスト中...';
+
+            statusDiv.className = 'vv-test-status testing';
+            statusDiv.innerHTML = '🔄 接続をテスト中...';
+            detailsDiv.style.display = 'none';
+
+            const results = {
+                url: url,
+                version: null,
+                speakers: null,
+                speakerCount: 0,
+                errors: []
+            };
+
+            // テスト1: バージョン確認
+            try {
+                statusDiv.innerHTML = '🔄 Step 1/3: バージョン情報を取得中...';
+                const versionRes = await fetch(url + '/version', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                if (versionRes.ok) {
+                    results.version = await versionRes.text();
+                } else {
+                    results.errors.push('バージョン取得失敗: HTTP ' + versionRes.status);
+                }
+            } catch (e) {
+                results.errors.push('バージョン取得エラー: ' + e.message);
+            }
+
+            // テスト2: スピーカー一覧
+            try {
+                statusDiv.innerHTML = '🔄 Step 2/3: スピーカー一覧を取得中...';
+                const speakersRes = await fetch(url + '/speakers', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                if (speakersRes.ok) {
+                    results.speakers = await speakersRes.json();
+                    results.speakerCount = results.speakers.length;
+                } else {
+                    results.errors.push('スピーカー取得失敗: HTTP ' + speakersRes.status);
+                }
+            } catch (e) {
+                results.errors.push('スピーカー取得エラー: ' + e.message);
+            }
+
+            // テスト3: 音声合成テスト（軽量）
+            let synthesisOk = false;
+            if (results.speakers && results.speakers.length > 0) {
+                try {
+                    statusDiv.innerHTML = '🔄 Step 3/3: 音声合成APIをテスト中...';
+                    const firstSpeakerId = results.speakers[0].styles[0].id;
+                    const queryRes = await fetch(url + '/audio_query?text=テスト&speaker=' + firstSpeakerId, {
+                        method: 'POST',
+                        mode: 'cors'
+                    });
+                    if (queryRes.ok) {
+                        synthesisOk = true;
+                    } else {
+                        results.errors.push('音声クエリ失敗: HTTP ' + queryRes.status);
+                    }
+                } catch (e) {
+                    results.errors.push('音声クエリエラー: ' + e.message);
+                }
+            }
+
+            // 結果表示
+            if (results.version && results.speakers && synthesisOk) {
+                statusDiv.className = 'vv-test-status success';
+                statusDiv.innerHTML = '✅ <strong>接続成功！</strong> VOICEVOXと正常に通信できます' +
+                    '<span class="vv-speaker-count">' + results.speakerCount + ' キャラクター利用可能</span>';
+
+                // グローバル変数にURLを保存（他のコンポーネントで使用）
+                window.VOICEVOX_CONNECTED_URL = url;
+
+                detailsDiv.style.display = 'block';
+                detailsDiv.innerHTML =
+                    '接続先: ' + url + '\\n' +
+                    'バージョン: ' + results.version + '\\n' +
+                    'キャラクター数: ' + results.speakerCount + '\\n' +
+                    '音声合成API: OK';
+            } else {
+                statusDiv.className = 'vv-test-status error';
+                statusDiv.innerHTML = '❌ <strong>接続失敗</strong><br><br>' +
+                    'VOICEVOXに接続できませんでした。下記のヘルプを確認してください。';
+
+                detailsDiv.style.display = 'block';
+                detailsDiv.innerHTML =
+                    '===== 診断結果 =====\\n' +
+                    '接続先: ' + url + '\\n' +
+                    'バージョン: ' + (results.version || '取得失敗') + '\\n' +
+                    'スピーカー: ' + (results.speakers ? results.speakerCount + '件' : '取得失敗') + '\\n\\n' +
+                    '===== エラー詳細 =====\\n' +
+                    (results.errors.length > 0 ? results.errors.join('\\n') : 'なし') + '\\n\\n' +
+                    '===== よくある原因 =====\\n' +
+                    '1. VOICEVOXが起動していない\\n' +
+                    '2. ポート番号が違う（設定画面で確認）\\n' +
+                    '3. ファイアウォールでブロックされている\\n' +
+                    '4. HTTPS環境からHTTP接続できない（Mixed Content）';
+            }
+
+            testBtn.disabled = false;
+            testBtn.classList.remove('testing');
+            testBtn.textContent = '接続テスト';
+        });
+
+        // ページ読み込み時に自動テスト（オプション）
+        // setTimeout(() => testBtn.click(), 1000);
+    })();
+    </script>
+    """
+
+    components.html(voicevox_test_js, height=480)
 
     # 音声生成用テキストを準備
     if st.session_state.hiragana_text and "hiragana_editor" in st.session_state:
@@ -981,7 +1334,13 @@ if st.session_state.formatted_text:
 
     <script>
     (function() {
-        const VOICEVOX_URL = 'http://localhost:50021';
+        // 接続テストで保存されたURL、またはlocalStorage、またはデフォルトを使用
+        function getVoicevoxUrl() {
+            if (window.VOICEVOX_CONNECTED_URL) return window.VOICEVOX_CONNECTED_URL;
+            const saved = localStorage.getItem('voicevox_url');
+            return saved || 'http://localhost:50021';
+        }
+        let VOICEVOX_URL = getVoicevoxUrl();
         const TEXT_TO_SPEAK = `""" + voice_text.replace('`', '\\`').replace('\n', '\\n') + """`;
         const FILENAME = '""" + final_filename + """';
 
@@ -1015,6 +1374,7 @@ if st.session_state.formatted_text:
 
         // VOICEVOXに接続してスピーカー一覧を取得
         async function loadSpeakers() {
+            VOICEVOX_URL = getVoicevoxUrl(); // 最新のURLを取得
             try {
                 const response = await fetch(VOICEVOX_URL + '/speakers');
                 if (!response.ok) throw new Error('接続失敗');
@@ -1396,7 +1756,13 @@ if st.session_state.formatted_text:
 
     <script>
     (function() {
-        const VOICEVOX_URL = 'http://localhost:50021';
+        // 接続テストで保存されたURL、またはlocalStorage、またはデフォルトを使用
+        function getVoicevoxUrl() {
+            if (window.VOICEVOX_CONNECTED_URL) return window.VOICEVOX_CONNECTED_URL;
+            const saved = localStorage.getItem('voicevox_url');
+            return saved || 'http://localhost:50021';
+        }
+        const VOICEVOX_URL = getVoicevoxUrl();
         const DISPLAY_TEXT = `""" + display_text_for_video + """`;
         const AUDIO_TEXT = `""" + voice_text.replace('`', '\\`').replace('\n', '\\n') + """`;
         const FILENAME = '""" + final_filename + """';
