@@ -10,18 +10,7 @@ class VideoGeneratorFFmpeg:
     """Pillow + FFmpegで動画生成（高速・高品質）"""
 
     # 縦書き時に回転が必要な文字
-    VERTICAL_ROTATE_CHARS = {
-        # 長音・波線
-        'ー', '〜', '～', '－', '-', '―', '‐', '–', '—',
-        # 計算記号
-        '=', '＝', '+', '＋', '×', '÷', '±',
-        # 比較記号
-        '<', '>', '＜', '＞', '≦', '≧', '≤', '≥', '≪', '≫',
-        # 矢印
-        '→', '←', '⇒', '⇐', '↔', '⇔',
-        # その他
-        '/', '／', '\\', '＼', '…', '‥'
-    }
+    VERTICAL_ROTATE_CHARS = {'ー', '〜', '～', '－', '-', '―', '‐', '–', '—'}
 
     # 小書き文字（右に寄せる）
     SMALL_CHARS = {'っ', 'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ', 'ゃ', 'ゅ', 'ょ', 'ゎ',
@@ -83,12 +72,10 @@ class VideoGeneratorFFmpeg:
         for font_path in font_paths:
             try:
                 font = ImageFont.truetype(font_path, font_size)
-                print(f"フォント読み込み成功: {font_path}")
                 break
             except:
                 continue
         if font is None:
-            print("警告: 日本語フォントが見つかりません。デフォルトフォントを使用します。")
             font = ImageFont.load_default()
 
         # 固定の文字送り（通常）
