@@ -1,0 +1,16 @@
+[Unit]
+Description=TikTok Re-Editor Streamlit App
+After=network.target
+
+[Service]
+Type=simple
+User=appuser
+Group=appuser
+WorkingDirectory=/var/www/tiktok-reeditor
+Environment="PATH=/var/www/tiktok-reeditor/venv/bin"
+ExecStart=/var/www/tiktok-reeditor/venv/bin/streamlit run app.py --server.port=8501 --server.address=127.0.0.1 --server.headless=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
