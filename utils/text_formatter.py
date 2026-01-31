@@ -5,11 +5,24 @@ from typing import Optional
 class GeminiFormatter:
     def __init__(self, api_key: str):
         genai.configure(api_key=api_key)
-        # 2026年1月時点の無料モデル
-        try:
+        # 2026年1月時点の無料モデル（優先順）
+        self.models_to_try = [
+            'gemini-2.5-flash',
+            'gemini-2.5-flash-lite',
+            'gemini-2.5-pro',
+            'gemini-2.0-flash',
+        ]
+        self.model = None
+        for model_name in self.models_to_try:
+            try:
+                self.model = genai.GenerativeModel(model_name)
+                print(f"Gemini初期化成功: {model_name}")
+                break
+            except Exception as e:
+                print(f"Gemini初期化失敗 {model_name}: {e}")
+                continue
+        if self.model is None:
             self.model = genai.GenerativeModel('gemini-2.5-flash')
-        except:
-            self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     def format_text(self, text: str) -> Optional[str]:
         """
@@ -53,28 +66,35 @@ class GeminiFormatter:
 全ての行が句点（。）または読点（、）で終わることを確認してください。
 """
 
-        try:
-            print(f"Gemini APIリクエスト中... (テキスト長: {len(text)}文字)")
-            response = self.model.generate_content(prompt)
-            print(f"Gemini APIレスポンス受信完了")
+        # 複数モデルでリトライ
+        for model_name in self.models_to_try:
+            try:
+                model = genai.GenerativeModel(model_name)
+                print(f"Gemini APIリクエスト中... (モデル: {model_name}, テキスト長: {len(text)}文字)")
+                response = model.generate_content(prompt)
 
-            # レスポンスの内容を確認
-            if hasattr(response, 'text'):
-                result = response.text.strip()
-                print(f"整形結果: {len(result)}文字")
-                return result
-            else:
-                print(f"レスポンスにtextが含まれていません: {response}")
-                # prompt_feedbackを確認
-                if hasattr(response, 'prompt_feedback'):
-                    print(f"Prompt feedback: {response.prompt_feedback}")
-                return None
+                if hasattr(response, 'text') and response.text:
+                    result = response.text.strip()
+                    print(f"整形成功 ({model_name}): {len(result)}文字")
+                    return result
+                else:
+                    print(f"レスポンスにtextがありません ({model_name})")
+                    continue
 
-        except Exception as e:
-            print(f"テキスト整形エラー: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
+            except Exception as e:
+                error_msg = str(e)
+                print(f"モデル {model_name} 失敗: {error_msg}")
+                if "429" in error_msg or "quota" in error_msg.lower() or "rate" in error_msg.lower():
+                    print("レート制限 - 次のモデルを試します")
+                    continue
+                elif "404" in error_msg or "not found" in error_msg.lower():
+                    print("モデル未対応 - 次のモデルを試します")
+                    continue
+                else:
+                    continue
+
+        print("全てのモデルで失敗しました")
+        return None
 
     def generate_filename(self, formatted_text: str) -> Optional[str]:
         """
