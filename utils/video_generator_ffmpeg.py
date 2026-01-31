@@ -101,11 +101,18 @@ class VideoGeneratorFFmpeg:
             is_small = char in self.SMALL_CHARS
             char_info.append((char, needs_rotation, is_small))
 
-        # 高さ計算（全文字同じ間隔）
-        total_height = char_pitch * len(char_info)
+        # 高さ計算（小書き文字の重なりを考慮）
+        total_height = 0
+        for i, (char, needs_rotation, is_small) in enumerate(char_info):
+            if is_small:
+                prev_is_small = i > 0 and char_info[i-1][2]
+                overlap = 10 if prev_is_small else 20
+                total_height += char_pitch - overlap
+            else:
+                total_height += char_pitch
         max_width = font_size
 
-        # 背景サイズ
+        # 背景サイズ（上下均等な余白30px）
         rect_width = max_width + 60
         rect_height = total_height + 60
 
