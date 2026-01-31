@@ -5,30 +5,11 @@ from typing import Optional
 class GeminiFormatter:
     def __init__(self, api_key: str):
         genai.configure(api_key=api_key)
-        # 2025年最新の無料モデル（優先順）
-        self.models_to_try = [
-            'gemini-2.5-flash',       # 最新・高速
-            'gemini-2.5-flash-lite',  # 軽量版
-            'gemini-2.0-flash',       # 2026年3月まで利用可能
-        ]
-        self.model = None
-        self.current_model_name = None
-
-        for model_name in self.models_to_try:
-            try:
-                self.model = genai.GenerativeModel(model_name)
-                self.current_model_name = model_name
-                print(f"Gemini model: {model_name}")
-                break
-            except Exception as e:
-                print(f"{model_name} failed: {e}")
-                continue
-
-        if self.model is None:
-            # フォールバック
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
-            self.current_model_name = 'gemini-2.5-flash'
-            print("Gemini model (fallback): gemini-2.5-flash")
+        # gemini-2.0-flash または gemini-1.5-flash を使用
+        try:
+            self.model = genai.GenerativeModel('gemini-2.0-flash')
+        except:
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
 
     def format_text(self, text: str) -> Optional[str]:
         """
@@ -72,44 +53,28 @@ class GeminiFormatter:
 全ての行が句点（。）または読点（、）で終わることを確認してください。
 """
 
-        # 複数のモデルを試す
-        last_error = None
-        for model_name in self.models_to_try:
-            try:
-                model = genai.GenerativeModel(model_name)
-                print(f"Gemini APIリクエスト中... (モデル: {model_name}, テキスト長: {len(text)}文字)")
-                response = model.generate_content(prompt)
-                print(f"Gemini APIレスポンス受信完了")
+        try:
+            print(f"Gemini APIリクエスト中... (テキスト長: {len(text)}文字)")
+            response = self.model.generate_content(prompt)
+            print(f"Gemini APIレスポンス受信完了")
 
-                # レスポンスの内容を確認
-                if hasattr(response, 'text') and response.text:
-                    result = response.text.strip()
-                    print(f"整形結果: {len(result)}文字")
-                    return result
-                else:
-                    print(f"レスポンスにtextが含まれていません: {response}")
-                    if hasattr(response, 'prompt_feedback'):
-                        print(f"Prompt feedback: {response.prompt_feedback}")
-                    continue  # 次のモデルを試す
+            # レスポンスの内容を確認
+            if hasattr(response, 'text'):
+                result = response.text.strip()
+                print(f"整形結果: {len(result)}文字")
+                return result
+            else:
+                print(f"レスポンスにtextが含まれていません: {response}")
+                # prompt_feedbackを確認
+                if hasattr(response, 'prompt_feedback'):
+                    print(f"Prompt feedback: {response.prompt_feedback}")
+                return None
 
-            except Exception as e:
-                last_error = e
-                error_str = str(e)
-                print(f"モデル {model_name} でエラー: {error_str}")
-
-                if "429" in error_str or "quota" in error_str.lower():
-                    print(f"レート制限 - 次のモデルを試します...")
-                    continue  # 次のモデルを試す
-                elif "not found" in error_str.lower() or "404" in error_str:
-                    print(f"モデルが見つかりません - 次のモデルを試します...")
-                    continue  # 次のモデルを試す
-                else:
-                    print(f"予期しないエラー: {type(e).__name__}: {e}")
-                    continue  # 次のモデルを試す
-
-        # 全てのモデルで失敗
-        print(f"全てのモデルで失敗しました。最後のエラー: {last_error}")
-        return None
+        except Exception as e:
+            print(f"テキスト整形エラー: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
 
     def generate_filename(self, formatted_text: str) -> Optional[str]:
         """
@@ -341,32 +306,35 @@ class GeminiFormatter:
    例: 2026年 → にせんにじゅうろくねん
 5. アルファベット → カタカナ読みをひらがなに
    例: TikTok → てぃっくとっく、AI → えーあい
+6. 改行はそのまま維持（行数を変えない）
 
-【忠実に変換 - 最重要】
-- 元のテキストの構造を完全に維持してください
-- 改行位置は絶対に変えない（行数を同じに）
-- 句読点（。、）の位置は変えない
-- スペースを追加しない
-- 読点を追加しない
-- 元にない文字を追加しない
+【句読点のルール - 重要】
+音声合成で自然なイントネーションを得るため、1行に1つだけ読点（、）を追加してください。
+- 元の句読点（。、）は維持
+- 追加する読点は1行につき最大1つ
+- 行の前半（最初の意味のまとまりの後）に入れる
+- 短い行（8文字以下）には追加不要
 
 【良い例】
 入力: 今回は2026年に、
-出力: こんかいはにせんにじゅうろくねんに、
+出力: こんかいは、にせんにじゅうろくねんに、
 
 入力: 給料が上がらない職種を、
-出力: きゅうりょうがあがらないしょくしゅを、
+出力: きゅうりょうが、あがらないしょくしゅを、
 
 入力: ランキング形式で紹介します。
-出力: らんきんぐけいしきでしょうかいします。
+出力: らんきんぐけいしきで、しょうかいします。
 
 入力: 早めの行動が必要です。
-出力: はやめのこうどうがひつようです。
+出力: はやめのこうどうが、ひつようです。
 
-【悪い例 - 絶対NG】
-× こんかいは にせんにじゅうろくねんに、（スペースが入っている）
-× こんかいは、にせんにじゅうろくねんに、（読点を追加している）
-× きゅうりょうが、あがらないしょくしゅを、（読点を追加している）
+入力: こう扱えば大丈夫。
+出力: こうあつかえば、だいじょうぶ。
+
+【悪い例】
+× こんかいはにせんにじゅうろくねんに（読点なし）
+× こんかいは、にせん、にじゅうろくねんに、（読点多すぎ）
+× きゅうりょうが、あがらない、しょくしゅを、（読点多すぎ）
 
 【注意】
 - 文脈に応じて正しい読み方を選んでください
@@ -378,8 +346,7 @@ class GeminiFormatter:
 
 【出力】
 ひらがな変換後のテキストのみを出力してください。
-行数・改行位置・句読点の位置は入力テキストと完全に同じにしてください。
-スペースや読点を追加しないでください。
+行数と改行位置は入力テキストと完全に同じにしてください。
 説明や追加コメントは不要です。
 """
 
