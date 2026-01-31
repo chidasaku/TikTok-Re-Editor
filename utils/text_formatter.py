@@ -5,11 +5,11 @@ from typing import Optional
 class GeminiFormatter:
     def __init__(self, api_key: str):
         genai.configure(api_key=api_key)
-        # gemini-2.0-flash または gemini-1.5-flash を使用
+        # 2026年1月時点の無料モデル
         try:
-            self.model = genai.GenerativeModel('gemini-2.0-flash')
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
         except:
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     def format_text(self, text: str) -> Optional[str]:
         """
