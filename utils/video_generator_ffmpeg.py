@@ -101,21 +101,6 @@ class VideoGeneratorFFmpeg:
             is_small = char in self.SMALL_CHARS
             char_info.append((char, needs_rotation, is_small))
 
-        # 高さ計算（小書き文字の重なりを考慮）
-        total_height = 0
-        for i, (char, needs_rotation, is_small) in enumerate(char_info):
-            if is_small:
-                prev_is_small = i > 0 and char_info[i-1][2]
-                overlap = 10 if prev_is_small else 20
-                total_height += char_pitch - overlap
-            else:
-                total_height += char_pitch
-        max_width = font_size
-
-        # 背景サイズ（上下均等な余白30px）
-        rect_width = max_width + 60
-        rect_height = total_height + 60
-
         # 画像を作成（透過、チェッカー、または緑背景）
         if transparent:
             img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
@@ -124,6 +109,49 @@ class VideoGeneratorFFmpeg:
         else:
             img = Image.new('RGB', (width, height), self.background_color)
         draw = ImageDraw.Draw(img)
+
+        # まずテキストの位置を計算（描画はしない）
+        x_center = width // 2
+        padding = 30  # 上下左右の余白
+
+        # 各文字の位置を計算
+        char_positions = []
+        y_offset = 0
+        for i, (char, needs_rotation, is_small) in enumerate(char_info):
+            if is_small:
+                prev_is_small = i > 0 and char_info[i-1][2]
+                overlap = 10 if prev_is_small else 20
+                char_positions.append({
+                    'char': char,
+                    'y': y_offset - overlap,
+                    'needs_rotation': needs_rotation,
+                    'is_small': is_small
+                })
+                y_offset += char_pitch - overlap
+            else:
+                char_positions.append({
+                    'char': char,
+                    'y': y_offset,
+                    'needs_rotation': needs_rotation,
+                    'is_small': is_small
+                })
+                y_offset += char_pitch
+
+        # 最後の文字の実際の高さを取得
+        last_char = char_info[-1][0]
+        last_bbox = draw.textbbox((0, 0), last_char, font=font)
+        last_char_height = last_bbox[3] - last_bbox[1]
+
+        # テキスト全体の実際の高さ（最後の文字は実際の高さを使用）
+        if char_positions:
+            text_height = char_positions[-1]['y'] + last_char_height
+        else:
+            text_height = 0
+
+        # 背景サイズ
+        max_width = font_size
+        rect_width = max_width + padding * 2
+        rect_height = text_height + padding * 2
 
         # 白い長方形を描画（Y=288）
         rect_x = (width - rect_width) // 2
@@ -134,41 +162,31 @@ class VideoGeneratorFFmpeg:
         )
 
         # 縦書きテキスト描画
-        y_offset = rect_y + 30
-        x_center = width // 2
+        text_start_y = rect_y + padding
 
-        for i, (char, needs_rotation, is_small) in enumerate(char_info):
-            if needs_rotation:
+        for i, pos in enumerate(char_positions):
+            char = pos['char']
+            y = text_start_y + pos['y']
+
+            if pos['needs_rotation']:
                 # 長音記号を90度回転（中央配置）
                 char_img = Image.new('RGBA', (font_size * 2, font_size * 2), (0, 0, 0, 0))
                 char_draw = ImageDraw.Draw(char_img)
                 char_draw.text((font_size // 2, font_size // 2), char, font=font, fill=(0, 0, 0, 255))
                 char_img = char_img.rotate(90, expand=True, resample=Image.BICUBIC)
                 paste_x = x_center - font_size
-                paste_y = y_offset - font_size // 2  # 中央に配置
+                paste_y = y - font_size // 2
                 img.paste(char_img, (paste_x, paste_y), char_img)
-                y_offset += char_pitch
-            elif is_small:
-                # 小書き文字は右に寄せ、前の文字に重ねる
-                # 前の文字が小書き文字かどうかで重なり量を変える
-                prev_is_small = i > 0 and char_info[i-1][2]
-                overlap = 10 if prev_is_small else 20  # 2文字目以降は10px、1文字目は20px
-
+            elif pos['is_small']:
                 bbox = draw.textbbox((0, 0), char, font=font)
                 char_w = bbox[2] - bbox[0]
-                # 通常文字と同じ中央揃えから10px右にオフセット
                 x = x_center - char_w // 2 + 10
-                y = y_offset - overlap
                 draw.text((x, y), char, font=font, fill=(0, 0, 0))
-                y_offset += char_pitch - overlap
             else:
-                # 通常の文字
                 bbox = draw.textbbox((0, 0), char, font=font)
                 char_w = bbox[2] - bbox[0]
                 x = x_center - char_w // 2
-                y = y_offset
                 draw.text((x, y), char, font=font, fill=(0, 0, 0))
-                y_offset += char_pitch
 
         return img
 
