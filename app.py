@@ -664,41 +664,53 @@ with tab4:
                 if result and result.get("segments"):
                     gladia_segments = result["segments"]
                     gladia_words = result.get("words", [])  # 単語レベルのタイムスタンプ
-                    raw_text = ' '.join([seg['text'] for seg in gladia_segments])
                     progress_bar.progress(40)
                     status_text.text(f"文字起こし完了: {len(gladia_segments)} セグメント, {len(gladia_words)} 単語")
 
-                    # Step 2: Geminiで整形（動画から生成と同じ）
-                    status_text.text("テキストを整形中（Gemini API）...")
+                    # Step 2: セグメントごとにテキストを整形（音声の区切りを維持）
+                    status_text.text("テキストを整形中...")
                     progress_bar.progress(50)
 
-                    formatted_text = gemini.format_text(raw_text)
+                    # 各セグメントのテキストを1行として扱う（音声の区切りに合わせる）
+                    formatted_lines = []
+                    punctuation = ('。', '、', '！', '？', '!', '?', '．', '，')
 
-                    if formatted_text:
-                        progress_bar.progress(70)
+                    for i, seg in enumerate(gladia_segments):
+                        text = seg['text'].strip()
+                        if not text:
+                            continue
+                        # 句読点で終わっていない場合は追加
+                        if not text.endswith(punctuation):
+                            # 最後のセグメントは「。」、それ以外は「、」
+                            if i == len(gladia_segments) - 1:
+                                text += '。'
+                            else:
+                                text += '、'
+                        formatted_lines.append(text)
 
-                        # ファイル名生成
-                        status_text.text("ファイル名を生成中...")
-                        generated_filename = gemini.generate_filename(formatted_text)
-                        if generated_filename:
-                            audio_filename = generated_filename
+                    formatted_text = '\n'.join(formatted_lines)
+                    progress_bar.progress(70)
 
-                        progress_bar.progress(100)
-                        status_text.text("Complete!")
+                    # ファイル名生成
+                    status_text.text("ファイル名を生成中...")
+                    generated_filename = gemini.generate_filename(formatted_text) if gemini else None
+                    if generated_filename:
+                        audio_filename = generated_filename
 
-                        # セッションに保存（単語リストも保存）
-                        st.session_state.timestamped_segments = gladia_segments
-                        st.session_state.gladia_words = gladia_words  # 単語レベルのタイムスタンプ
-                        st.session_state.audio_file_data = uploaded_audio.read()
-                        uploaded_audio.seek(0)
-                        st.session_state.filename = audio_filename
-                        st.session_state.audio_upload_mode = True
-                        st.session_state.audio_text_editor = formatted_text
+                    progress_bar.progress(100)
+                    status_text.text("Complete!")
 
-                        st.success(f"Complete! 整形済みテキスト生成完了（{len(gladia_words)}単語のタイムスタンプ取得）")
-                        st.rerun()
-                    else:
-                        st.error("テキスト整形に失敗しました")
+                    # セッションに保存（セグメントのタイムスタンプを保持）
+                    st.session_state.timestamped_segments = gladia_segments
+                    st.session_state.gladia_words = gladia_words  # 単語レベルのタイムスタンプ
+                    st.session_state.audio_file_data = uploaded_audio.read()
+                    uploaded_audio.seek(0)
+                    st.session_state.filename = audio_filename
+                    st.session_state.audio_upload_mode = True
+                    st.session_state.audio_text_editor = formatted_text
+
+                    st.success(f"Complete! {len(gladia_segments)}セグメント（音声の区切り）で整形完了")
+                    st.rerun()
                 else:
                     st.error("文字起こしに失敗しました")
 
@@ -727,9 +739,9 @@ with tab4:
 
         # 行数カウント
         lines = [line.strip() for line in edited_text.strip().split('\n') if line.strip()]
-        word_count = len(st.session_state.gladia_words) if st.session_state.get('gladia_words') else 0
+        segment_count = len(st.session_state.timestamped_segments) if st.session_state.get('timestamped_segments') else 0
 
-        st.success(f"**{len(lines)}行** / {word_count}単語のタイムスタンプで同期")
+        st.success(f"**{len(lines)}行** / 元の音声区切り: {segment_count}セグメント")
 
         # 3. 動画生成
         st.markdown("---")
@@ -745,87 +757,79 @@ with tab4:
 
                 # テキストを行に分割
                 lines = [line.strip() for line in edited_text.strip().split('\n') if line.strip()]
-                gladia_words = st.session_state.get('gladia_words', [])
+                gladia_segments = st.session_state.get('timestamped_segments', [])
 
-                # 単語レベルのタイムスタンプを使って各行のタイミングを計算
-                def calculate_line_timestamps(lines, words):
-                    """各行に含まれる単語を特定し、タイムスタンプを計算"""
-                    import re
-
-                    # 句読点を除去する関数
-                    def normalize(text):
-                        return re.sub(r'[、。,.\s　]', '', text)
-
-                    # 全単語を結合した文字列
-                    all_words_text = ''.join([w['word'] for w in words])
-                    all_words_text_normalized = normalize(all_words_text)
-
-                    # 各行のテキスト（句読点除去）
-                    lines_normalized = [normalize(line) for line in lines]
-
+                # セグメントのタイムスタンプを直接使用（行数が一致する場合）
+                if len(lines) == len(gladia_segments):
+                    # 音声の区切りとテキストの行が一致：セグメントのタイムスタンプを直接使用
                     segments = []
-                    word_index = 0
-                    current_pos = 0  # 単語リスト内での文字位置
-
-                    for line_idx, line in enumerate(lines):
-                        line_norm = lines_normalized[line_idx]
-                        if not line_norm:
-                            # 空行の場合はスキップ
-                            continue
-
-                        # この行の最初の単語を見つける
-                        start_word_idx = word_index
-                        chars_matched = 0
-
-                        # 行の文字数分の単語を消費
-                        while word_index < len(words) and chars_matched < len(line_norm):
-                            word = words[word_index]['word']
-                            word_norm = normalize(word)
-                            chars_matched += len(word_norm)
-                            word_index += 1
-
-                        end_word_idx = word_index - 1 if word_index > start_word_idx else start_word_idx
-
-                        # この行のタイムスタンプを設定
-                        if start_word_idx < len(words) and end_word_idx < len(words):
-                            start_time = words[start_word_idx]['start']
-                            end_time = words[end_word_idx]['end']
-                        else:
-                            # フォールバック: 均等分割
-                            total_duration = words[-1]['end'] if words else 1
-                            segment_duration = total_duration / len(lines)
-                            start_time = line_idx * segment_duration
-                            end_time = (line_idx + 1) * segment_duration
-
+                    for i, (line, seg) in enumerate(zip(lines, gladia_segments)):
                         segments.append({
-                            "start": start_time,
-                            "end": end_time,
+                            "start": seg['start'],
+                            "end": seg['end'],
                             "text": line
                         })
-
-                    return segments
-
-                if gladia_words:
-                    # 単語レベルのタイムスタンプを使用
-                    segments = calculate_line_timestamps(lines, gladia_words)
-                    status_text.text(f"単語レベルのタイムスタンプで同期: {len(segments)}行")
+                    status_text.text(f"音声の区切りに合わせて同期: {len(segments)}セグメント")
                 else:
-                    # フォールバック: 均等分割
-                    gladia_segments = st.session_state.timestamped_segments
-                    total_start = gladia_segments[0]['start']
-                    total_end = gladia_segments[-1]['end']
-                    total_duration = total_end - total_start
-                    segment_duration = total_duration / len(lines) if len(lines) > 0 else 1
+                    # 行数が異なる場合：単語レベルのタイムスタンプを使用
+                    gladia_words = st.session_state.get('gladia_words', [])
 
-                    segments = []
-                    for i, text in enumerate(lines):
-                        start_time = total_start + (i * segment_duration)
-                        end_time = total_start + ((i + 1) * segment_duration)
-                        segments.append({
-                            "start": start_time,
-                            "end": end_time,
-                            "text": text
-                        })
+                    if gladia_words:
+                        import re
+                        def normalize(text):
+                            return re.sub(r'[、。,.\s　]', '', text)
+
+                        segments = []
+                        word_index = 0
+
+                        for line_idx, line in enumerate(lines):
+                            line_norm = normalize(line)
+                            if not line_norm:
+                                continue
+
+                            start_word_idx = word_index
+                            chars_matched = 0
+
+                            while word_index < len(gladia_words) and chars_matched < len(line_norm):
+                                word = gladia_words[word_index]['word']
+                                word_norm = normalize(word)
+                                chars_matched += len(word_norm)
+                                word_index += 1
+
+                            end_word_idx = word_index - 1 if word_index > start_word_idx else start_word_idx
+
+                            if start_word_idx < len(gladia_words) and end_word_idx < len(gladia_words):
+                                start_time = gladia_words[start_word_idx]['start']
+                                end_time = gladia_words[end_word_idx]['end']
+                            else:
+                                total_duration = gladia_words[-1]['end'] if gladia_words else 1
+                                segment_duration = total_duration / len(lines)
+                                start_time = line_idx * segment_duration
+                                end_time = (line_idx + 1) * segment_duration
+
+                            segments.append({
+                                "start": start_time,
+                                "end": end_time,
+                                "text": line
+                            })
+                        status_text.text(f"単語レベルのタイムスタンプで同期: {len(segments)}行")
+                    else:
+                        # フォールバック: 均等分割
+                        total_start = gladia_segments[0]['start'] if gladia_segments else 0
+                        total_end = gladia_segments[-1]['end'] if gladia_segments else 1
+                        total_duration = total_end - total_start
+                        segment_duration = total_duration / len(lines) if len(lines) > 0 else 1
+
+                        segments = []
+                        for i, text in enumerate(lines):
+                            start_time = total_start + (i * segment_duration)
+                            end_time = total_start + ((i + 1) * segment_duration)
+                            segments.append({
+                                "start": start_time,
+                                "end": end_time,
+                                "text": text
+                            })
+                        status_text.text(f"均等分割で同期: {len(segments)}行")
 
                 progress_bar.progress(10)
 
