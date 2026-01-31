@@ -5,22 +5,31 @@ from typing import Optional
 class GeminiFormatter:
     def __init__(self, api_key: str):
         genai.configure(api_key=api_key)
-        # gemini-2.5-flash を優先的に使用（クォータが別枠）
-        models_to_try = ['gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.0-flash']
+        # 利用可能なモデルを順番に試す
+        self.models_to_try = [
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
+            'gemini-2.0-flash-exp',
+            'gemini-pro'
+        ]
         self.model = None
-        for model_name in models_to_try:
+        self.current_model_name = None
+
+        for model_name in self.models_to_try:
             try:
                 self.model = genai.GenerativeModel(model_name)
-                # テスト呼び出しはせず、モデルを設定するだけ
+                self.current_model_name = model_name
                 print(f"Gemini model: {model_name}")
                 break
             except Exception as e:
                 print(f"{model_name} failed: {e}")
                 continue
+
         if self.model is None:
             # フォールバック
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
-            print("Gemini model (fallback): gemini-2.5-flash")
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.current_model_name = 'gemini-1.5-flash'
+            print("Gemini model (fallback): gemini-1.5-flash")
 
     def format_text(self, text: str) -> Optional[str]:
         """
@@ -64,33 +73,44 @@ class GeminiFormatter:
 全ての行が句点（。）または読点（、）で終わることを確認してください。
 """
 
-        try:
-            print(f"Gemini APIリクエスト中... (テキスト長: {len(text)}文字)")
-            response = self.model.generate_content(prompt)
-            print(f"Gemini APIレスポンス受信完了")
+        # 複数のモデルを試す
+        last_error = None
+        for model_name in self.models_to_try:
+            try:
+                model = genai.GenerativeModel(model_name)
+                print(f"Gemini APIリクエスト中... (モデル: {model_name}, テキスト長: {len(text)}文字)")
+                response = model.generate_content(prompt)
+                print(f"Gemini APIレスポンス受信完了")
 
-            # レスポンスの内容を確認
-            if hasattr(response, 'text'):
-                result = response.text.strip()
-                print(f"整形結果: {len(result)}文字")
-                return result
-            else:
-                print(f"レスポンスにtextが含まれていません: {response}")
-                # prompt_feedbackを確認
-                if hasattr(response, 'prompt_feedback'):
-                    print(f"Prompt feedback: {response.prompt_feedback}")
-                return None
+                # レスポンスの内容を確認
+                if hasattr(response, 'text') and response.text:
+                    result = response.text.strip()
+                    print(f"整形結果: {len(result)}文字")
+                    return result
+                else:
+                    print(f"レスポンスにtextが含まれていません: {response}")
+                    if hasattr(response, 'prompt_feedback'):
+                        print(f"Prompt feedback: {response.prompt_feedback}")
+                    continue  # 次のモデルを試す
 
-        except Exception as e:
-            error_str = str(e)
-            if "429" in error_str or "quota" in error_str.lower() or "ResourceExhausted" in str(type(e).__name__):
-                print(f"⚠️ Gemini APIクォータ超過エラー: レート制限に達しました。30秒後に再試行してください。")
-                print(f"詳細: {e}")
-            else:
-                print(f"テキスト整形エラー: {type(e).__name__}: {e}")
-                import traceback
-                traceback.print_exc()
-            return None
+            except Exception as e:
+                last_error = e
+                error_str = str(e)
+                print(f"モデル {model_name} でエラー: {error_str}")
+
+                if "429" in error_str or "quota" in error_str.lower():
+                    print(f"レート制限 - 次のモデルを試します...")
+                    continue  # 次のモデルを試す
+                elif "not found" in error_str.lower() or "404" in error_str:
+                    print(f"モデルが見つかりません - 次のモデルを試します...")
+                    continue  # 次のモデルを試す
+                else:
+                    print(f"予期しないエラー: {type(e).__name__}: {e}")
+                    continue  # 次のモデルを試す
+
+        # 全てのモデルで失敗
+        print(f"全てのモデルで失敗しました。最後のエラー: {last_error}")
+        return None
 
     def generate_filename(self, formatted_text: str) -> Optional[str]:
         """
