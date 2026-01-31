@@ -394,41 +394,103 @@ if 'gladia_words' not in st.session_state:
 if 'audio_upload_sns_content' not in st.session_state:
     st.session_state.audio_upload_sns_content = None
 
+# ブラウザのlocalStorageからAPIキーを読み込むJavaScript
+import streamlit.components.v1 as components
+
+# セッションステートにAPIキーを初期化
+if 'gladia_api_key' not in st.session_state:
+    st.session_state.gladia_api_key = ""
+if 'gemini_api_key' not in st.session_state:
+    st.session_state.gemini_api_key = ""
+
+# localStorageから読み込むHTML/JavaScript
+load_keys_js = """
+<script>
+    const gladiaKey = localStorage.getItem('tiktok_reeditor_gladia_key') || '';
+    const geminiKey = localStorage.getItem('tiktok_reeditor_gemini_key') || '';
+
+    // Streamlitにデータを送信
+    if (gladiaKey || geminiKey) {
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: {gladia: gladiaKey, gemini: geminiKey}
+        }, '*');
+    }
+</script>
+"""
+
 # API設定（折りたたみ式）- タイトルの上に配置
 with st.expander("API設定", expanded=False):
-    # プレースホルダーテキストは空白として扱う
-    env_gladia = os.getenv("GLADIA_API_KEY", "")
-    if env_gladia == "ここに貼り付け":
-        env_gladia = ""
-    env_gemini = os.getenv("GEMINI_API_KEY", "")
-    if env_gemini == "ここに貼り付け":
-        env_gemini = ""
-    env_voicevox = os.getenv("VOICEVOX_API_URL", "http://localhost:50021")
+    st.markdown("💡 **APIキーはブラウザに保存されます**（次回以降自動入力）")
 
     col1, col2 = st.columns(2)
     with col1:
-        gladia_api_key = st.text_input("Gladia API Key", value=env_gladia, type="password")
+        gladia_api_key = st.text_input(
+            "Gladia API Key",
+            value=st.session_state.gladia_api_key,
+            type="password",
+            key="gladia_input"
+        )
         st.markdown('<a href="https://www.gladia.io/" target="_blank" style="color: #00f2ea; font-size: 12px;">Gladia APIキーを取得</a>', unsafe_allow_html=True)
     with col2:
-        gemini_api_key = st.text_input("Gemini API Key", value=env_gemini, type="password")
+        gemini_api_key = st.text_input(
+            "Gemini API Key",
+            value=st.session_state.gemini_api_key,
+            type="password",
+            key="gemini_input"
+        )
         st.markdown('<a href="https://aistudio.google.com/apikey" target="_blank" style="color: #00f2ea; font-size: 12px;">Gemini APIキーを取得</a>', unsafe_allow_html=True)
 
-    voicevox_url = st.text_input("VOICEVOX URL", value=env_voicevox)
-
-    # APIキー保存ボタン
+    # APIキーをブラウザに保存するボタン
     if st.button("APIキーを保存", key="save_api_keys"):
-        env_path = os.path.join(os.path.dirname(__file__), ".env")
-        with open(env_path, "w") as f:
-            f.write(f"GLADIA_API_KEY={gladia_api_key}\n")
-            f.write(f"GEMINI_API_KEY={gemini_api_key}\n")
-            f.write(f"VOICEVOX_API_URL={voicevox_url}\n")
-        st.success("APIキーを保存しました")
+        st.session_state.gladia_api_key = gladia_api_key
+        st.session_state.gemini_api_key = gemini_api_key
 
-    st.markdown('テキストファイルから生成する場合、Gladia APIは不要です（ひらがな変換にはGemini APIが必要）')
+        # localStorageに保存するJavaScript
+        save_js = f"""
+        <script>
+            localStorage.setItem('tiktok_reeditor_gladia_key', '{gladia_api_key}');
+            localStorage.setItem('tiktok_reeditor_gemini_key', '{gemini_api_key}');
+        </script>
+        """
+        components.html(save_js, height=0)
+        st.success("✅ APIキーをブラウザに保存しました（次回以降自動入力されます）")
+
+    st.markdown('テキストファイルから生成する場合、Gladia APIは不要です')
+
+    # localStorageから読み込み（初回のみ）
+    if not st.session_state.gladia_api_key and not st.session_state.gemini_api_key:
+        components.html("""
+        <script>
+            const gladiaKey = localStorage.getItem('tiktok_reeditor_gladia_key') || '';
+            const geminiKey = localStorage.getItem('tiktok_reeditor_gemini_key') || '';
+            if (gladiaKey || geminiKey) {
+                // URLパラメータで渡す（リロード時に読み込まれる）
+                const url = new URL(window.parent.location);
+                if (gladiaKey) url.searchParams.set('gk', gladiaKey);
+                if (geminiKey) url.searchParams.set('mk', geminiKey);
+                if (url.toString() !== window.parent.location.toString()) {
+                    window.parent.location = url.toString();
+                }
+            }
+        </script>
+        """, height=0)
+
+# URLパラメータからAPIキーを取得（localStorage経由）
+query_params = st.query_params
+if 'gk' in query_params and not st.session_state.gladia_api_key:
+    st.session_state.gladia_api_key = query_params['gk']
+    gladia_api_key = query_params['gk']
+if 'mk' in query_params and not st.session_state.gemini_api_key:
+    st.session_state.gemini_api_key = query_params['mk']
+    gemini_api_key = query_params['mk']
+
+# VOICEVOX URLはデフォルト値を使用（UIから削除）
+voicevox_url = "http://localhost:50021"
 
 # タイトル
 st.markdown('<h1 translate="no">TikTok Re-Editor v3</h1>', unsafe_allow_html=True)
-st.markdown("文字起こし → 整形 → 音声合成 → **透過動画生成**")
+st.markdown("文字起こし → 整形 → 音声アップロード → **透過動画生成**")
 
 # APIクライアントの初期化
 gladia = GladiaAPI(gladia_api_key) if gladia_api_key else None
@@ -1263,4 +1325,4 @@ if st.session_state.formatted_text:
 
 # フッター
 st.markdown("---")
-st.markdown("Made with Streamlit, Gladia API, Gemini API, VOICEVOX, and FFmpeg | **v3**")
+st.markdown("Made with Streamlit, Gladia API, Gemini API, and FFmpeg | **v3**")
