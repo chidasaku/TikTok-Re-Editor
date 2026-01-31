@@ -673,49 +673,91 @@ with tab4:
                     status_text.text("テキストを整形中（Gemini API）...")
                     progress_bar.progress(50)
 
-                    # 各セグメントを個別に整形し、セグメント間は空行で区切る
-                    formatted_segments = []
-                    segment_line_mapping = []  # どの行がどのセグメントに属するか
+                    # 全セグメントのテキストを結合してGeminiで一括整形
+                    all_text = ' '.join([seg['text'].strip() for seg in gladia_segments if seg['text'].strip()])
 
-                    for seg_idx, seg in enumerate(gladia_segments):
-                        text = seg['text'].strip()
-                        if not text:
-                            continue
+                    formatted_text = None
+                    if gemini:
+                        formatted_text = gemini.format_text(all_text)
 
-                        # 各セグメントを14文字以内に整形
-                        if gemini and len(text) > 14:
-                            formatted_seg = gemini.format_text(text)
-                            if formatted_seg:
-                                seg_lines = [line.strip() for line in formatted_seg.strip().split('\n') if line.strip()]
-                            else:
-                                # フォールバック: 手動で分割
-                                seg_lines = []
-                                current_line = ""
-                                for char in text:
-                                    current_line += char
-                                    if len(current_line) >= 14 or char in ['。', '、']:
-                                        seg_lines.append(current_line)
-                                        current_line = ""
-                                if current_line:
-                                    seg_lines.append(current_line)
-                        else:
-                            # 14文字以下ならそのまま
+                    if formatted_text:
+                        # Gemini整形成功：単語レベルのタイムスタンプで同期
+                        formatted_segments = [line.strip() for line in formatted_text.strip().split('\n') if line.strip()]
+                        segment_line_mapping = []  # 単語レベルで再計算するため空にする
+                    else:
+                        # フォールバック: 自然な区切り位置で14文字以内に分割
+                        formatted_segments = []
+                        segment_line_mapping = []
+
+                        # 日本語の自然な区切り位置（助詞の後）
+                        break_after = ['は', 'が', 'を', 'に', 'で', 'と', 'も', 'の', 'や', 'か', 'へ', 'より', 'から', 'まで', 'ので', 'けど', 'ても', 'たら', 'なら', 'ば', 'て', 'て、', 'で、']
+
+                        for seg_idx, seg in enumerate(gladia_segments):
+                            text = seg['text'].strip()
+                            if not text:
+                                continue
+
+                            # 句読点で終わっていない場合は追加
                             punctuation = ('。', '、', '！', '？', '!', '?', '．', '，')
                             if not text.endswith(punctuation):
                                 if seg_idx == len(gladia_segments) - 1:
                                     text += '。'
                                 else:
                                     text += '、'
-                            seg_lines = [text]
 
-                        # このセグメントの行を記録
-                        for line in seg_lines:
-                            formatted_segments.append(line)
-                            segment_line_mapping.append({
-                                "segment_idx": seg_idx,
-                                "start": seg['start'],
-                                "end": seg['end']
-                            })
+                            # 14文字以下ならそのまま
+                            if len(text) <= 14:
+                                formatted_segments.append(text)
+                                segment_line_mapping.append({
+                                    "segment_idx": seg_idx,
+                                    "start": seg['start'],
+                                    "end": seg['end']
+                                })
+                            else:
+                                # 自然な区切り位置で分割
+                                seg_lines = []
+                                current_line = ""
+
+                                i = 0
+                                while i < len(text):
+                                    current_line += text[i]
+
+                                    # 14文字に近づいたら区切り位置を探す
+                                    if len(current_line) >= 10:
+                                        # 句読点で区切る
+                                        if text[i] in ['。', '、', '！', '？']:
+                                            seg_lines.append(current_line)
+                                            current_line = ""
+                                        # 助詞の後で区切る
+                                        elif len(current_line) >= 12:
+                                            found_break = False
+                                            for bp in break_after:
+                                                if current_line.endswith(bp) and len(current_line) <= 14:
+                                                    seg_lines.append(current_line + '、')
+                                                    current_line = ""
+                                                    found_break = True
+                                                    break
+                                            # 区切り位置が見つからず14文字を超えそうなら強制改行
+                                            if not found_break and len(current_line) >= 14:
+                                                seg_lines.append(current_line + '、')
+                                                current_line = ""
+
+                                    i += 1
+
+                                if current_line:
+                                    # 最後の行に句読点がなければ追加
+                                    if not current_line.endswith(punctuation):
+                                        current_line += '、'
+                                    seg_lines.append(current_line)
+
+                                # このセグメントの行を記録
+                                for line in seg_lines:
+                                    formatted_segments.append(line)
+                                    segment_line_mapping.append({
+                                        "segment_idx": seg_idx,
+                                        "start": seg['start'],
+                                        "end": seg['end']
+                                    })
 
                     formatted_text = '\n'.join(formatted_segments)
                     progress_bar.progress(70)
@@ -770,12 +812,9 @@ with tab4:
         # 行数カウント
         lines = [line.strip() for line in edited_text.strip().split('\n') if line.strip()]
         segment_count = len(st.session_state.timestamped_segments) if st.session_state.get('timestamped_segments') else 0
-        mapping_count = len(st.session_state.segment_line_mapping) if st.session_state.get('segment_line_mapping') else 0
+        word_count = len(st.session_state.gladia_words) if st.session_state.get('gladia_words') else 0
 
-        if len(lines) == mapping_count:
-            st.success(f"**{len(lines)}行**（{segment_count}個の音声区切りに対応）")
-        else:
-            st.warning(f"**{len(lines)}行**（編集により音声区切りとの対応が変更されました）")
+        st.success(f"**{len(lines)}行** / {word_count}単語のタイムスタンプで同期")
 
         # 3. 動画生成
         st.markdown("---")
@@ -794,37 +833,8 @@ with tab4:
                 segment_line_mapping = st.session_state.get('segment_line_mapping', [])
                 gladia_segments = st.session_state.get('timestamped_segments', [])
 
-                # セグメントと行のマッピングがある場合（編集されていない場合）
-                if segment_line_mapping and len(lines) == len(segment_line_mapping):
-                    # 各行にセグメントのタイムスタンプを割り当て
-                    # 同じセグメントに属する行は時間を均等に分割
-                    segments = []
-
-                    # セグメントごとに行をグループ化
-                    from collections import defaultdict
-                    seg_groups = defaultdict(list)
-                    for i, mapping in enumerate(segment_line_mapping):
-                        seg_groups[mapping['segment_idx']].append((i, lines[i], mapping))
-
-                    # 各セグメント内で時間を均等分割
-                    for seg_idx in sorted(seg_groups.keys()):
-                        group = seg_groups[seg_idx]
-                        seg_start = group[0][2]['start']
-                        seg_end = group[0][2]['end']
-                        seg_duration = seg_end - seg_start
-                        line_duration = seg_duration / len(group)
-
-                        for j, (line_idx, line_text, mapping) in enumerate(group):
-                            start_time = seg_start + (j * line_duration)
-                            end_time = seg_start + ((j + 1) * line_duration)
-                            segments.append({
-                                "start": start_time,
-                                "end": end_time,
-                                "text": line_text
-                            })
-
-                    status_text.text(f"音声セグメントに合わせて同期: {len(segments)}行")
-                else:
+                # 常に単語レベルのタイムスタンプを使用（より正確な同期）
+                if True:
                     # 編集された場合：単語レベルのタイムスタンプを使用
                     gladia_words = st.session_state.get('gladia_words', [])
 
