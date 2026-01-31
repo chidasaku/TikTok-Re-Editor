@@ -391,6 +391,8 @@ if 'timestamped_segments' not in st.session_state:
     st.session_state.timestamped_segments = None
 if 'gladia_words' not in st.session_state:
     st.session_state.gladia_words = []
+if 'segment_line_mapping' not in st.session_state:
+    st.session_state.segment_line_mapping = []
 if 'audio_upload_sns_content' not in st.session_state:
     st.session_state.audio_upload_sns_content = None
 
@@ -667,28 +669,55 @@ with tab4:
                     progress_bar.progress(40)
                     status_text.text(f"文字起こし完了: {len(gladia_segments)} セグメント, {len(gladia_words)} 単語")
 
-                    # Step 2: セグメントごとにテキストを整形（音声の区切りを維持）
-                    status_text.text("テキストを整形中...")
+                    # Step 2: 各セグメントを14文字以内に整形（音声の区切りを維持）
+                    status_text.text("テキストを整形中（Gemini API）...")
                     progress_bar.progress(50)
 
-                    # 各セグメントのテキストを1行として扱う（音声の区切りに合わせる）
-                    formatted_lines = []
-                    punctuation = ('。', '、', '！', '？', '!', '?', '．', '，')
+                    # 各セグメントを個別に整形し、セグメント間は空行で区切る
+                    formatted_segments = []
+                    segment_line_mapping = []  # どの行がどのセグメントに属するか
 
-                    for i, seg in enumerate(gladia_segments):
+                    for seg_idx, seg in enumerate(gladia_segments):
                         text = seg['text'].strip()
                         if not text:
                             continue
-                        # 句読点で終わっていない場合は追加
-                        if not text.endswith(punctuation):
-                            # 最後のセグメントは「。」、それ以外は「、」
-                            if i == len(gladia_segments) - 1:
-                                text += '。'
-                            else:
-                                text += '、'
-                        formatted_lines.append(text)
 
-                    formatted_text = '\n'.join(formatted_lines)
+                        # 各セグメントを14文字以内に整形
+                        if gemini and len(text) > 14:
+                            formatted_seg = gemini.format_text(text)
+                            if formatted_seg:
+                                seg_lines = [line.strip() for line in formatted_seg.strip().split('\n') if line.strip()]
+                            else:
+                                # フォールバック: 手動で分割
+                                seg_lines = []
+                                current_line = ""
+                                for char in text:
+                                    current_line += char
+                                    if len(current_line) >= 14 or char in ['。', '、']:
+                                        seg_lines.append(current_line)
+                                        current_line = ""
+                                if current_line:
+                                    seg_lines.append(current_line)
+                        else:
+                            # 14文字以下ならそのまま
+                            punctuation = ('。', '、', '！', '？', '!', '?', '．', '，')
+                            if not text.endswith(punctuation):
+                                if seg_idx == len(gladia_segments) - 1:
+                                    text += '。'
+                                else:
+                                    text += '、'
+                            seg_lines = [text]
+
+                        # このセグメントの行を記録
+                        for line in seg_lines:
+                            formatted_segments.append(line)
+                            segment_line_mapping.append({
+                                "segment_idx": seg_idx,
+                                "start": seg['start'],
+                                "end": seg['end']
+                            })
+
+                    formatted_text = '\n'.join(formatted_segments)
                     progress_bar.progress(70)
 
                     # ファイル名生成
@@ -700,16 +729,17 @@ with tab4:
                     progress_bar.progress(100)
                     status_text.text("Complete!")
 
-                    # セッションに保存（セグメントのタイムスタンプを保持）
+                    # セッションに保存
                     st.session_state.timestamped_segments = gladia_segments
-                    st.session_state.gladia_words = gladia_words  # 単語レベルのタイムスタンプ
+                    st.session_state.gladia_words = gladia_words
+                    st.session_state.segment_line_mapping = segment_line_mapping  # 行とセグメントの対応
                     st.session_state.audio_file_data = uploaded_audio.read()
                     uploaded_audio.seek(0)
                     st.session_state.filename = audio_filename
                     st.session_state.audio_upload_mode = True
                     st.session_state.audio_text_editor = formatted_text
 
-                    st.success(f"Complete! {len(gladia_segments)}セグメント（音声の区切り）で整形完了")
+                    st.success(f"Complete! {len(gladia_segments)}セグメント → {len(formatted_segments)}行（14文字以内）")
                     st.rerun()
                 else:
                     st.error("文字起こしに失敗しました")
@@ -740,8 +770,12 @@ with tab4:
         # 行数カウント
         lines = [line.strip() for line in edited_text.strip().split('\n') if line.strip()]
         segment_count = len(st.session_state.timestamped_segments) if st.session_state.get('timestamped_segments') else 0
+        mapping_count = len(st.session_state.segment_line_mapping) if st.session_state.get('segment_line_mapping') else 0
 
-        st.success(f"**{len(lines)}行** / 元の音声区切り: {segment_count}セグメント")
+        if len(lines) == mapping_count:
+            st.success(f"**{len(lines)}行**（{segment_count}個の音声区切りに対応）")
+        else:
+            st.warning(f"**{len(lines)}行**（編集により音声区切りとの対応が変更されました）")
 
         # 3. 動画生成
         st.markdown("---")
@@ -757,21 +791,41 @@ with tab4:
 
                 # テキストを行に分割
                 lines = [line.strip() for line in edited_text.strip().split('\n') if line.strip()]
+                segment_line_mapping = st.session_state.get('segment_line_mapping', [])
                 gladia_segments = st.session_state.get('timestamped_segments', [])
 
-                # セグメントのタイムスタンプを直接使用（行数が一致する場合）
-                if len(lines) == len(gladia_segments):
-                    # 音声の区切りとテキストの行が一致：セグメントのタイムスタンプを直接使用
+                # セグメントと行のマッピングがある場合（編集されていない場合）
+                if segment_line_mapping and len(lines) == len(segment_line_mapping):
+                    # 各行にセグメントのタイムスタンプを割り当て
+                    # 同じセグメントに属する行は時間を均等に分割
                     segments = []
-                    for i, (line, seg) in enumerate(zip(lines, gladia_segments)):
-                        segments.append({
-                            "start": seg['start'],
-                            "end": seg['end'],
-                            "text": line
-                        })
-                    status_text.text(f"音声の区切りに合わせて同期: {len(segments)}セグメント")
+
+                    # セグメントごとに行をグループ化
+                    from collections import defaultdict
+                    seg_groups = defaultdict(list)
+                    for i, mapping in enumerate(segment_line_mapping):
+                        seg_groups[mapping['segment_idx']].append((i, lines[i], mapping))
+
+                    # 各セグメント内で時間を均等分割
+                    for seg_idx in sorted(seg_groups.keys()):
+                        group = seg_groups[seg_idx]
+                        seg_start = group[0][2]['start']
+                        seg_end = group[0][2]['end']
+                        seg_duration = seg_end - seg_start
+                        line_duration = seg_duration / len(group)
+
+                        for j, (line_idx, line_text, mapping) in enumerate(group):
+                            start_time = seg_start + (j * line_duration)
+                            end_time = seg_start + ((j + 1) * line_duration)
+                            segments.append({
+                                "start": start_time,
+                                "end": end_time,
+                                "text": line_text
+                            })
+
+                    status_text.text(f"音声セグメントに合わせて同期: {len(segments)}行")
                 else:
-                    # 行数が異なる場合：単語レベルのタイムスタンプを使用
+                    # 編集された場合：単語レベルのタイムスタンプを使用
                     gladia_words = st.session_state.get('gladia_words', [])
 
                     if gladia_words:
