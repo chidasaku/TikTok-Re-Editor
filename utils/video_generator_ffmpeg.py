@@ -125,7 +125,7 @@ class VideoGeneratorFFmpeg:
         )
 
         # 縦書きテキスト描画
-        y_offset = rect_y + 30
+        y_offset = rect_y + 5
         x_center = width // 2
 
         for i, (char, needs_rotation, is_small) in enumerate(char_info):
