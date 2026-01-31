@@ -568,15 +568,15 @@ class VideoGeneratorFFmpeg:
         fps: int = 30,
         transparent: bool = True,
         progress_callback=None,
-        audio_margin: float = 0.3
+        audio_margin: float = 0.0
     ) -> tuple:
-        """タイムスタンプ付きセグメントから動画を生成
+        """タイムスタンプ付きセグメントから動画を生成（音声を切らない方式）
 
         Args:
             audio_path: 元の音声ファイルパス
             segments: [{"start": 0.0, "end": 1.5, "text": "テキスト"}, ...]
             progress_callback: 進捗コールバック関数
-            audio_margin: 音声切り出し時のマージン（秒）
+            audio_margin: 未使用（互換性のため残す）
 
         Returns:
             tuple: (透過動画bytes, プレビュー動画bytes)
@@ -592,53 +592,31 @@ class VideoGeneratorFFmpeg:
         segment_videos_transparent = []
         segment_videos_preview = []
 
-        # 事前に全セグメントの時間を計算（重複を防ぐ）
-        segment_times = []
-        for i, seg in enumerate(segments):
-            original_start = seg["start"]
-            original_end = seg["end"]
-
-            # 開始時間: 前のセグメントの終了時間と重複しないように
-            if i > 0:
-                prev_calculated_end = segment_times[i - 1]["end"]
-                start_time = max(original_start - audio_margin, prev_calculated_end)
-            else:
-                start_time = max(original_start - audio_margin, 0)
-
-            # 終了時間: 次のセグメントの開始時間と重複しないように
-            if i < total_clips - 1:
-                next_start = segments[i + 1]["start"]
-                # 次のセグメントがマージンを適用した開始時間より前にならないように
-                end_time = min(original_end + audio_margin, next_start - audio_margin / 2)
-                # 少なくともoriginal_endまでは確保
-                end_time = max(end_time, original_end)
-            else:
-                end_time = min(original_end + audio_margin, total_audio_duration)
-
-            segment_times.append({"start": start_time, "end": end_time})
-
         try:
+            # 各セグメントの映像のみを作成（音声なし）
             for i, seg in enumerate(segments):
                 clip_num = i + 1
                 text = seg["text"].strip()
+                start_time = seg["start"]
 
-                start_time = segment_times[i]["start"]
-                end_time = segment_times[i]["end"]
+                # 終了時間：次のセグメントの開始時間、または最後なら音声全体の長さ
+                if i < total_clips - 1:
+                    end_time = segments[i + 1]["start"]
+                else:
+                    end_time = total_audio_duration
+
                 duration = end_time - start_time
                 # 負の値や極端に短い値を防止（最小0.1秒）
                 if duration < 0.1:
-                    duration = 0.5  # デフォルト0.5秒
-                    print(f"警告: セグメント {i} の時間が不正です。0.5秒に設定します。")
+                    duration = 0.1
+                    print(f"警告: セグメント {i} の時間が短すぎます。0.1秒に設定します。")
+
                 display_text = text.replace('、', '').replace('。', '').replace('，', '').replace('．', '')
 
-                print(f"セグメント {clip_num}/{total_clips}: {display_text[:20]}... ({start_time:.2f}s - {end_time:.2f}s)")
+                print(f"セグメント {clip_num}/{total_clips}: {display_text[:20]}... ({start_time:.2f}s - {end_time:.2f}s, duration={duration:.2f}s)")
 
                 if progress_callback:
                     progress_callback(clip_num, total_clips, f"クリップ {clip_num}/{total_clips} を生成中...")
-
-                segment_audio_path = os.path.join(temp_dir, f"audio_segment_{i}.wav")
-                self._extract_audio_segment(audio_path, segment_audio_path, start_time, duration)
-                temp_files.append(segment_audio_path)
 
                 if transparent:
                     img_transparent = self._create_text_image(display_text, width, height, transparent=True)
@@ -651,13 +629,14 @@ class VideoGeneratorFFmpeg:
                     img_preview.save(img_preview_path)
                     temp_files.append(img_preview_path)
 
+                    # 映像のみのセグメント（音声なし）
                     video_transparent_path = os.path.join(temp_dir, f"segment_transparent_{i}.mov")
-                    self._create_video_segment(img_transparent_path, segment_audio_path, video_transparent_path, duration, fps, transparent=True)
+                    self._create_video_only_segment(img_transparent_path, video_transparent_path, duration, fps, transparent=True)
                     segment_videos_transparent.append(video_transparent_path)
                     temp_files.append(video_transparent_path)
 
                     video_preview_path = os.path.join(temp_dir, f"segment_preview_{i}.mp4")
-                    self._create_video_segment(img_preview_path, segment_audio_path, video_preview_path, duration, fps, transparent=False)
+                    self._create_video_only_segment(img_preview_path, video_preview_path, duration, fps, transparent=False)
                     segment_videos_preview.append(video_preview_path)
                     temp_files.append(video_preview_path)
                 else:
@@ -667,19 +646,29 @@ class VideoGeneratorFFmpeg:
                     temp_files.append(img_path)
 
                     video_path = os.path.join(temp_dir, f"segment_{i}.mp4")
-                    self._create_video_segment(img_path, segment_audio_path, video_path, duration, fps, transparent=False)
+                    self._create_video_only_segment(img_path, video_path, duration, fps, transparent=False)
                     segment_videos_transparent.append(video_path)
                     temp_files.append(video_path)
 
             print(f"全 {len(segment_videos_transparent)} セグメントを連結中...")
 
             if transparent:
+                # 映像のみを連結
+                video_only_transparent_path = os.path.join(temp_dir, "video_only_transparent.mov")
+                self._concat_videos_no_audio(segment_videos_transparent, video_only_transparent_path, transparent=True)
+                temp_files.append(video_only_transparent_path)
+
+                video_only_preview_path = os.path.join(temp_dir, "video_only_preview.mp4")
+                self._concat_videos_no_audio(segment_videos_preview, video_only_preview_path, transparent=False)
+                temp_files.append(video_only_preview_path)
+
+                # 元の音声とマージ
                 output_transparent_path = os.path.join(temp_dir, "output_transparent.mov")
-                self._concat_videos(segment_videos_transparent, output_transparent_path, transparent=True)
+                self._mux_video_audio(video_only_transparent_path, audio_path, output_transparent_path, transparent=True)
                 temp_files.append(output_transparent_path)
 
                 output_preview_path = os.path.join(temp_dir, "output_preview.mp4")
-                self._concat_videos(segment_videos_preview, output_preview_path, transparent=False)
+                self._mux_video_audio(video_only_preview_path, audio_path, output_preview_path, transparent=False)
                 temp_files.append(output_preview_path)
 
                 with open(output_transparent_path, 'rb') as f:
@@ -690,8 +679,14 @@ class VideoGeneratorFFmpeg:
                 print("動画生成完了！（透過 + プレビュー）")
                 return (video_transparent, video_preview)
             else:
+                # 映像のみを連結
+                video_only_path = os.path.join(temp_dir, "video_only.mp4")
+                self._concat_videos_no_audio(segment_videos_transparent, video_only_path, transparent=False)
+                temp_files.append(video_only_path)
+
+                # 元の音声とマージ
                 output_path = os.path.join(temp_dir, "output.mp4")
-                self._concat_videos(segment_videos_transparent, output_path, transparent=False)
+                self._mux_video_audio(video_only_path, audio_path, output_path, transparent=False)
                 temp_files.append(output_path)
 
                 with open(output_path, 'rb') as f:
@@ -717,3 +712,96 @@ class VideoGeneratorFFmpeg:
             '-ac', '2',
             output_path
         ], capture_output=True, check=True)
+
+    def _create_video_only_segment(self, img_path: str, output_path: str, duration: float, fps: int, transparent: bool = False):
+        """音声なしの映像セグメントを作成"""
+        if transparent:
+            # ProRes 4444（アルファチャンネル対応）
+            subprocess.run([
+                'ffmpeg', '-y',
+                '-loop', '1',
+                '-framerate', str(fps),
+                '-i', img_path,
+                '-t', str(duration),
+                '-c:v', 'prores_ks',
+                '-profile:v', '4444',
+                '-pix_fmt', 'yuva444p10le',
+                '-an',
+                output_path
+            ], capture_output=True, check=True)
+        else:
+            # 通常のMP4（音声なし）
+            subprocess.run([
+                'ffmpeg', '-y',
+                '-loop', '1',
+                '-framerate', str(fps),
+                '-i', img_path,
+                '-t', str(duration),
+                '-c:v', 'libx264',
+                '-tune', 'stillimage',
+                '-pix_fmt', 'yuv420p',
+                '-an',
+                output_path
+            ], capture_output=True, check=True)
+
+    def _concat_videos_no_audio(self, video_paths: list, output_path: str, transparent: bool = False):
+        """音声なしの動画を連結"""
+        list_path = output_path + '.txt'
+        with open(list_path, 'w') as f:
+            for vp in video_paths:
+                f.write(f"file '{vp}'\n")
+
+        if transparent:
+            subprocess.run([
+                'ffmpeg', '-y',
+                '-f', 'concat',
+                '-safe', '0',
+                '-i', list_path,
+                '-c:v', 'prores_ks',
+                '-profile:v', '4444',
+                '-pix_fmt', 'yuva444p10le',
+                '-an',
+                output_path
+            ], capture_output=True, check=True)
+        else:
+            subprocess.run([
+                'ffmpeg', '-y',
+                '-f', 'concat',
+                '-safe', '0',
+                '-i', list_path,
+                '-c:v', 'libx264',
+                '-preset', 'fast',
+                '-crf', '18',
+                '-an',
+                output_path
+            ], capture_output=True, check=True)
+
+        os.unlink(list_path)
+
+    def _mux_video_audio(self, video_path: str, audio_path: str, output_path: str, transparent: bool = False):
+        """映像と音声を結合（元の音声をそのまま使用）"""
+        if transparent:
+            subprocess.run([
+                'ffmpeg', '-y',
+                '-i', video_path,
+                '-i', audio_path,
+                '-c:v', 'copy',
+                '-c:a', 'pcm_s16le',
+                '-map', '0:v:0',
+                '-map', '1:a:0',
+                '-shortest',
+                output_path
+            ], capture_output=True, check=True)
+        else:
+            subprocess.run([
+                'ffmpeg', '-y',
+                '-i', video_path,
+                '-i', audio_path,
+                '-c:v', 'copy',
+                '-c:a', 'aac',
+                '-b:a', '192k',
+                '-map', '0:v:0',
+                '-map', '1:a:0',
+                '-shortest',
+                output_path
+            ], capture_output=True, check=True)
