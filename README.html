@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Re-Editor v3 マニュアル</title>
+    <style>
+        :root {
+            --primary: #00f2ea;
+            --secondary: #fe2c55;
+            --dark: #121212;
+            --light: #ffffff;
+            --gray: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+            line-height: 1.8;
+            color: var(--dark);
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--light);
+            padding: 60px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            color: var(--dark);
+            margin: 50px 0 25px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 30px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+        }
+
+        h3 {
+            font-size: 1.3em;
+            color: var(--gray);
+            margin: 30px 0 15px 0;
+        }
+
+        h4 {
+            font-size: 1.1em;
+            color: #555;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin: 15px 0;
+            color: #444;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .feature-card h4 {
+            color: var(--dark);
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+        }
+
+        .feature-card p {
+            margin: 0;
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .step-container {
+            margin: 30px 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 20px;
+            margin: 25px 0;
+            padding: 25px;
+            background: #fafafa;
+            border-radius: 15px;
+            border: 1px solid #eee;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            margin: 0 0 10px 0;
+            color: var(--dark);
+        }
+
+        .step-content ol, .step-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .step-content li {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .note {
+            background: linear-gradient(135deg, #fff3cd, #ffeeba);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+
+        .note-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .important {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .important-title {
+            font-weight: bold;
+            color: #721c24;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--dark), #2a2a2a);
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tr:hover {
+            background: #e9ecef;
+        }
+
+        code {
+            background: #2d2d2d;
+            color: var(--primary);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .troubleshoot {
+            margin: 20px 0;
+        }
+
+        .troubleshoot-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #6c757d;
+        }
+
+        .troubleshoot-item h4 {
+            color: var(--dark);
+            margin: 0 0 10px 0;
+        }
+
+        .troubleshoot-item ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .version-history {
+            margin: 30px 0;
+        }
+
+        .version {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .version h4 {
+            color: var(--dark);
+            margin: 0 0 10px 0;
+        }
+
+        .version ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 30px;
+            }
+            .step {
+                break-inside: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            .step {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TikTok Re-Editor v3</h1>
+            <p class="subtitle">透過動画自動生成アプリケーション マニュアル</p>
+        </div>
+
+        <h2>このアプリでできること</h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>1. テキストから透過動画を自動生成</h4>
+                <p>テキストを入力するだけで、音声付きの透過動画を自動生成。背景が透過なので、Premiere Proなどで好きな背景と合成できます。</p>
+            </div>
+            <div class="feature-card">
+                <h4>2. AIによる読み間違い防止</h4>
+                <p>漢字をひらがなに変換してから音声生成。VOICEVOXの読み間違いを防止し、正確な発音を実現します。</p>
+            </div>
+            <div class="feature-card">
+                <h4>3. 動画の文字起こしから自動生成</h4>
+                <p>既存の動画をアップロードするだけで文字起こし。自動でテキスト整形→音声生成→動画作成まで完了。</p>
+            </div>
+            <div class="feature-card">
+                <h4>4. 音声アップロードで字幕付き動画生成</h4>
+                <p>外部TTSで生成した音声をアップロード。単語レベルのタイムスタンプで音声と字幕がピッタリ同期した動画を生成。</p>
+            </div>
+            <div class="feature-card">
+                <h4>5. SNS投稿用コンテンツも自動生成</h4>
+                <p>タイトル案、紹介文案、ハッシュタグを自動提案。そのままSNSに投稿できます。</p>
+            </div>
+        </div>
+
+        <h2>必要な環境</h2>
+
+        <h3>ソフトウェア</h3>
+        <table>
+            <tr>
+                <th>ソフトウェア</th>
+                <th>用途</th>
+                <th>ダウンロード</th>
+            </tr>
+            <tr>
+                <td><strong>Python 3.8以上</strong></td>
+                <td>アプリ実行</td>
+                <td>https://www.python.org/</td>
+            </tr>
+            <tr>
+                <td><strong>FFmpeg</strong></td>
+                <td>動画生成</td>
+                <td>https://ffmpeg.org/</td>
+            </tr>
+            <tr>
+                <td><strong>VOICEVOX</strong></td>
+                <td>音声合成</td>
+                <td>https://voicevox.hiroshiba.jp/</td>
+            </tr>
+        </table>
+
+        <h3>APIキー</h3>
+        <table>
+            <tr>
+                <th>API</th>
+                <th>用途</th>
+                <th>取得先</th>
+                <th>必須</th>
+            </tr>
+            <tr>
+                <td><strong>Gladia API</strong></td>
+                <td>動画の文字起こし</td>
+                <td>https://www.gladia.io/</td>
+                <td>動画入力時のみ</td>
+            </tr>
+            <tr>
+                <td><strong>Gemini API</strong></td>
+                <td>ひらがな変換・テキスト整形・SNS生成</td>
+                <td>https://aistudio.google.com/apikey</td>
+                <td>推奨</td>
+            </tr>
+        </table>
+
+        <h2>インストール</h2>
+
+        <h3>1. 必要なライブラリをインストール</h3>
+        <p><strong>Mac:</strong> <code>インストール.command</code> をダブルクリック</p>
+        <p><strong>Windows:</strong> <code>インストール.bat</code> をダブルクリック</p>
+        <p>または手動で:</p>
+        <div class="code-block">pip install -r requirements.txt</div>
+
+        <h3>2. FFmpegをインストール</h3>
+        <p><strong>Mac:</strong></p>
+        <div class="code-block">brew install ffmpeg</div>
+
+        <p><strong>Windows:</strong></p>
+        <ol>
+            <li><a href="https://github.com/BtbN/FFmpeg-Builds/releases" target="_blank">https://github.com/BtbN/FFmpeg-Builds/releases</a> にアクセス</li>
+            <li><code>ffmpeg-master-latest-win64-gpl.zip</code> をダウンロード</li>
+            <li>ZIPを解凍して <code>C:\ffmpeg</code> に配置（フォルダ名を <code>ffmpeg</code> に変更）</li>
+            <li>環境変数PATHに追加:
+                <ul>
+                    <li>Windowsキー → 「環境変数」と検索 → 「システム環境変数の編集」をクリック</li>
+                    <li>「環境変数」ボタンをクリック</li>
+                    <li>「システム環境変数」の「Path」を選択 → 「編集」をクリック</li>
+                    <li>「新規」をクリック → <code>C:\ffmpeg\bin</code> と入力</li>
+                    <li>「OK」を3回クリックして閉じる</li>
+                </ul>
+            </li>
+            <li>PCを再起動</li>
+            <li>コマンドプロンプトで <code>ffmpeg -version</code> と入力して確認</li>
+        </ol>
+
+        <h3>3. VOICEVOXをインストール</h3>
+        <p>https://voicevox.hiroshiba.jp/ からダウンロードしてインストール</p>
+
+        <h2>使い方（詳細手順）</h2>
+
+        <div class="step-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>準備</h4>
+                    <ol>
+                        <li><strong>VOICEVOXを起動</strong> - アプリを開いておくだけでOK</li>
+                        <li><strong>アプリを起動</strong> - Mac: <code>起動.command</code> / Windows: <code>起動.bat</code> をダブルクリック</li>
+                        <li><strong>APIキーを設定</strong>（初回のみ）- 画面上部の「API設定」からGemini APIキーを入力</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>テキストを入力</h4>
+                    <p>4つの方法から選択:</p>
+                    <ul>
+                        <li><strong>方法A: 動画から</strong> - 「動画から生成」タブで動画をアップロード（Gladia API必要）</li>
+                        <li><strong>方法B: ファイルから</strong> - 「ファイルから生成」タブで.txtファイルをアップロード</li>
+                        <li><strong>方法C: テキスト入力</strong> - 「テキスト入力」タブでテキストを貼り付け</li>
+                        <li><strong>方法D: 音声アップロード</strong> - 「音声アップロード」タブで外部TTSの音声をアップロード → 自動で文字起こし＆整形 → 動画生成</li>
+                    </ul>
+                    <p>「START」をクリックして処理開始（音声アップロードは自動処理）</p>
+                    <div class="note">
+                        <div class="note-title">音声アップロードのポイント</div>
+                        <ul>
+                            <li>単語レベルのタイムスタンプで音声と字幕がピッタリ同期します</li>
+                            <li>外部TTSで生成した音声をそのまま使用できます</li>
+                            <li>テキスト編集画面で、すでに整形済みのテキストをコピペしてもOK</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>ひらがなに変換</h4>
+                    <ol>
+                        <li>左側のテキストを確認・編集（動画に表示されるテキスト）</li>
+                        <li><strong>「ひらがなに変換」をクリック</strong></li>
+                        <li>右側にひらがなテキストが表示される</li>
+                        <li>必要に応じてひらがなを修正</li>
+                    </ol>
+                    <div class="important">
+                        <div class="important-title">重要</div>
+                        ひらがなは音声生成に使用されます。読み方が間違っていたら修正してください。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>音声を生成</h4>
+                    <ol>
+                        <li><strong>キャラクターを選択</strong>（例: 青山龍星）</li>
+                        <li><strong>スタイルを選択</strong>（例: ノーマル）</li>
+                        <li>「PREVIEW」で試聴（任意）</li>
+                        <li><strong>話速を調整</strong>（1.0x = 標準）</li>
+                        <li><strong>間の長さを調整</strong>（1.0 = 標準）</li>
+                        <li><strong>「GENERATE AUDIO」をクリック</strong></li>
+                        <li>音声が生成されたら再生して確認</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h4>動画を生成</h4>
+                    <ol>
+                        <li><strong>「GENERATE VIDEO」をクリック</strong></li>
+                        <li>進捗バーが100%になるまで待つ</li>
+                        <li>iPhone風フレームでプレビューを確認</li>
+                        <li><strong>「DOWNLOAD VIDEO (.mov)」で透過動画をダウンロード</strong></li>
+                    </ol>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        ダウンロードされるのは透過動画（MOV形式）です。プレビューはチェッカー背景ですが、実際は透過です。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h4>テキストを修正して再生成（任意）</h4>
+                    <p>動画生成後にテキストを修正したい場合:</p>
+                    <ol>
+                        <li>左側のテキストを編集</li>
+                        <li>「GENERATE VIDEO」を再度クリック</li>
+                        <li>修正後のテキストで動画が再生成されます</li>
+                    </ol>
+                    <div class="important">
+                        <div class="important-title">注意</div>
+                        行数を変更した場合は、音声も再生成が必要です。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">7</div>
+                <div class="step-content">
+                    <h4>SNSコンテンツを生成（任意）</h4>
+                    <ol>
+                        <li>「GENERATE SNS」をクリック</li>
+                        <li>タイトル案・紹介文案・ハッシュタグが生成される</li>
+                        <li>必要に応じて編集</li>
+                        <li>「DOWNLOAD ALL TEXT」で一括ダウンロード</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <h2>出力ファイル</h2>
+        <table>
+            <tr>
+                <th>ファイル</th>
+                <th>形式</th>
+                <th>説明</th>
+            </tr>
+            <tr>
+                <td><code>ファイル名.txt</code></td>
+                <td>TEXT</td>
+                <td>整形済みテキスト</td>
+            </tr>
+            <tr>
+                <td><code>ファイル名.wav</code></td>
+                <td>WAV</td>
+                <td>音声ファイル</td>
+            </tr>
+            <tr>
+                <td><code>ファイル名.mov</code></td>
+                <td>MOV (ProRes 4444)</td>
+                <td>透過動画</td>
+            </tr>
+            <tr>
+                <td><code>ファイル名_full.txt</code></td>
+                <td>TEXT</td>
+                <td>テキスト + SNSコンテンツ</td>
+            </tr>
+        </table>
+
+        <h2>動画の使い方（Premiere Pro）</h2>
+        <ol>
+            <li>生成したMOVファイルをPremiere Proに読み込み</li>
+            <li>タイムラインに配置</li>
+            <li>背景動画の上にレイヤーとして重ねる</li>
+            <li>透過部分から背景が見える</li>
+        </ol>
+
+        <h2>トラブルシューティング</h2>
+
+        <div class="troubleshoot">
+            <div class="troubleshoot-item">
+                <h4>VOICEVOXに接続できない</h4>
+                <ul>
+                    <li>VOICEVOXアプリが起動しているか確認</li>
+                    <li>デフォルトURL: <code>http://localhost:50021</code></li>
+                </ul>
+            </div>
+            <div class="troubleshoot-item">
+                <h4>音声が生成されない</h4>
+                <ul>
+                    <li>VOICEVOXが起動中か確認</li>
+                    <li>テキストが空でないか確認</li>
+                </ul>
+            </div>
+            <div class="troubleshoot-item">
+                <h4>動画が生成されない</h4>
+                <ul>
+                    <li>FFmpegがインストールされているか確認</li>
+                    <li><code>ffmpeg -version</code> で確認</li>
+                </ul>
+            </div>
+            <div class="troubleshoot-item">
+                <h4>ひらがな変換ができない</h4>
+                <ul>
+                    <li>Gemini APIキーが正しいか確認</li>
+                    <li>API設定で保存されているか確認</li>
+                </ul>
+            </div>
+            <div class="troubleshoot-item">
+                <h4>テキスト修正後に動画が変わらない</h4>
+                <ul>
+                    <li>「GENERATE VIDEO」を再度クリックしてください</li>
+                    <li>行数を変更した場合は音声も再生成が必要です</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>技術仕様</h2>
+        <table>
+            <tr>
+                <th>項目</th>
+                <th>仕様</th>
+            </tr>
+            <tr>
+                <td>動画サイズ</td>
+                <td>1080 x 1920 (TikTok縦型)</td>
+            </tr>
+            <tr>
+                <td>動画形式</td>
+                <td>MOV (ProRes 4444)</td>
+            </tr>
+            <tr>
+                <td>透過</td>
+                <td>アルファチャンネル対応</td>
+            </tr>
+            <tr>
+                <td>音声形式</td>
+                <td>WAV (16bit PCM)</td>
+            </tr>
+            <tr>
+                <td>フレームレート</td>
+                <td>30fps</td>
+            </tr>
+            <tr>
+                <td>テキスト表示</td>
+                <td>縦書き（中央配置）</td>
+            </tr>
+        </table>
+
+        <h2>更新履歴</h2>
+
+        <div class="version-history">
+            <div class="version">
+                <h4>v3.2 - Audio Upload (2025-01-29)</h4>
+                <ul>
+                    <li>音声アップロード機能を追加</li>
+                    <li>外部TTSで生成した音声から動画を生成可能</li>
+                    <li>単語レベルのタイムスタンプで音声と字幕を正確に同期</li>
+                    <li>音声アップロード後、自動で文字起こし＆テキスト整形</li>
+                </ul>
+            </div>
+            <div class="version">
+                <h4>v3.1 (2025-01-23)</h4>
+                <ul>
+                    <li>ひらがな音声を動画生成に再利用（音声の二重生成を廃止）</li>
+                    <li>テキスト修正後の動画再生成に対応</li>
+                    <li>ひらがな変換の精度向上（余計なスペース・読点を追加しない）</li>
+                    <li>縦書き対応文字を追加（=、+、×、÷、→など）</li>
+                </ul>
+            </div>
+            <div class="version">
+                <h4>v3.0 (2025-01-18)</h4>
+                <ul>
+                    <li>透過動画生成に対応</li>
+                    <li>iPhone風プレビュー追加</li>
+                    <li>ひらがな変換機能追加</li>
+                    <li>UI改善（TikTokスタイル）</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>TikTok Re-Editor v3 | MIT License</p>
+        </div>
+    </div>
+</body>
+</html>
