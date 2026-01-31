@@ -137,14 +137,9 @@ class VideoGeneratorFFmpeg:
                 })
                 y_offset += char_pitch
 
-        # 最後の文字の実際の高さを取得
-        last_char = char_info[-1][0]
-        last_bbox = draw.textbbox((0, 0), last_char, font=font)
-        last_char_height = last_bbox[3] - last_bbox[1]
-
-        # テキスト全体の実際の高さ（最後の文字は実際の高さを使用）
+        # テキスト全体の高さ（最後の文字もchar_pitchで計算して均等に）
         if char_positions:
-            text_height = char_positions[-1]['y'] + last_char_height
+            text_height = char_positions[-1]['y'] + char_pitch
         else:
             text_height = 0
 
