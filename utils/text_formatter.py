@@ -5,12 +5,11 @@ from typing import Optional
 class GeminiFormatter:
     def __init__(self, api_key: str):
         genai.configure(api_key=api_key)
-        # 利用可能なモデルを順番に試す
+        # 2025年最新の無料モデル（優先順）
         self.models_to_try = [
-            'gemini-1.5-flash',
-            'gemini-1.5-pro',
-            'gemini-2.0-flash-exp',
-            'gemini-pro'
+            'gemini-2.5-flash',       # 最新・高速
+            'gemini-2.5-flash-lite',  # 軽量版
+            'gemini-2.0-flash',       # 2026年3月まで利用可能
         ]
         self.model = None
         self.current_model_name = None
@@ -27,9 +26,9 @@ class GeminiFormatter:
 
         if self.model is None:
             # フォールバック
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
-            self.current_model_name = 'gemini-1.5-flash'
-            print("Gemini model (fallback): gemini-1.5-flash")
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            self.current_model_name = 'gemini-2.5-flash'
+            print("Gemini model (fallback): gemini-2.5-flash")
 
     def format_text(self, text: str) -> Optional[str]:
         """
