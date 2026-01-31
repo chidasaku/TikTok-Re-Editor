@@ -342,6 +342,7 @@ class VideoGeneratorFFmpeg:
                 'ffmpeg', '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
+                '-t', str(duration),
                 '-i', img_path,
                 '-i', audio_path,
                 '-c:v', 'prores_ks',
@@ -351,7 +352,6 @@ class VideoGeneratorFFmpeg:
                 '-map', '0:v:0',
                 '-map', '1:a:0',
                 '-vsync', 'cfr',
-                '-shortest',
                 output_path
             ], capture_output=True, check=True)
         else:
@@ -360,11 +360,11 @@ class VideoGeneratorFFmpeg:
                 'ffmpeg', '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
+                '-t', str(duration),
                 '-i', img_path,
                 '-i', audio_path,
                 '-c:v', 'libx264',
                 '-tune', 'stillimage',
-                '-shortest',
                 '-c:a', 'aac',
                 '-b:a', '192k',
                 '-pix_fmt', 'yuv420p',
