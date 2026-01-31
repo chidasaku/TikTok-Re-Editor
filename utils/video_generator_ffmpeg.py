@@ -61,6 +61,18 @@ class VideoGeneratorFFmpeg:
                 "/System/Library/Fonts/ヒラギノ角ゴ ProN W6.otf",
                 "/System/Library/Fonts/Hiragino Sans GB.ttc",
             ]
+        elif platform.system() == "Linux":
+            # Linux (Streamlit Cloud等) → Noto Sans CJK
+            font_paths = [
+                "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+                "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+                "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+                "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+                "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
+                "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
+                "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Bold.otf",
+                "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Regular.otf",
+            ]
         else:
             # Windows → 游ゴシック
             font_paths = [
@@ -71,10 +83,12 @@ class VideoGeneratorFFmpeg:
         for font_path in font_paths:
             try:
                 font = ImageFont.truetype(font_path, font_size)
+                print(f"フォント読み込み成功: {font_path}")
                 break
             except:
                 continue
         if font is None:
+            print("警告: 日本語フォントが見つかりません。デフォルトフォントを使用します。")
             font = ImageFont.load_default()
 
         # 固定の文字送り（通常）
@@ -328,7 +342,6 @@ class VideoGeneratorFFmpeg:
                 'ffmpeg', '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
-                '-t', str(duration),
                 '-i', img_path,
                 '-i', audio_path,
                 '-c:v', 'prores_ks',
@@ -338,6 +351,7 @@ class VideoGeneratorFFmpeg:
                 '-map', '0:v:0',
                 '-map', '1:a:0',
                 '-vsync', 'cfr',
+                '-shortest',
                 output_path
             ], capture_output=True, check=True)
         else:
@@ -346,11 +360,11 @@ class VideoGeneratorFFmpeg:
                 'ffmpeg', '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
-                '-t', str(duration),
                 '-i', img_path,
                 '-i', audio_path,
                 '-c:v', 'libx264',
                 '-tune', 'stillimage',
+                '-shortest',
                 '-c:a', 'aac',
                 '-b:a', '192k',
                 '-pix_fmt', 'yuv420p',
