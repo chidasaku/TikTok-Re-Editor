@@ -113,8 +113,8 @@ class VideoGeneratorFFmpeg:
             fill=(255, 255, 255)
         )
 
-        # 縦書きテキスト描画
-        y_offset = rect_y + 30
+        # 縦書きテキスト描画（白背景はそのまま、文字のみ25px上）
+        y_offset = rect_y + 5
         x_center = width // 2
 
         for i, (char, needs_rotation, is_small) in enumerate(char_info):
