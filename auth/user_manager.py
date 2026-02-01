@@ -6,11 +6,11 @@ from .lark_base import LarkBaseClient
 
 
 class UserStatus:
-    """User status constants"""
-    PENDING = "pending"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    BANNED = "banned"
+    """User status constants (Japanese)"""
+    PENDING = "承認待ち"
+    APPROVED = "承認済み"
+    REJECTED = "却下"
+    BANNED = "BAN"
 
 
 class UserManager:
