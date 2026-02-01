@@ -421,7 +421,7 @@ header_col1, header_col2 = st.columns([4, 1])
 with header_col1:
     st.markdown('<h1 translate="no">TikTok Re-Editor v3</h1>', unsafe_allow_html=True)
 with header_col2:
-    st.markdown("<div style='height: 15px'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 30px'></div>", unsafe_allow_html=True)
     user = get_current_user()
     if user:
         is_admin = is_current_user_admin()
