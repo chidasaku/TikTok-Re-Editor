@@ -19,6 +19,31 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ========================================
+# 認証チェック（Google OAuth + Lark Base）
+# ========================================
+from auth import check_auth, is_current_user_admin, render_user_menu
+from admin import render_admin_panel
+
+# 管理者パネル表示フラグ
+if "show_admin_panel" not in st.session_state:
+    st.session_state.show_admin_panel = False
+
+# 認証チェック（未承認の場合はここでstopされる）
+if not check_auth():
+    st.stop()
+
+# ユーザーメニュー表示
+render_user_menu()
+
+# 管理者パネル表示
+if st.session_state.show_admin_panel and is_current_user_admin():
+    render_admin_panel()
+    if st.button("← アプリに戻る", key="back_to_app_btn"):
+        st.session_state.show_admin_panel = False
+        st.rerun()
+    st.stop()
+
 # 翻訳を無効化
 st.markdown('<meta name="google" content="notranslate">', unsafe_allow_html=True)
 

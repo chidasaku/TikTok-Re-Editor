@@ -25,3 +25,6 @@ Thumbs.db
 *.tmp
 *.temp
 output/
+
+# Streamlit secrets (OAuth credentials)
+.streamlit/secrets.toml
