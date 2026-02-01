@@ -5,35 +5,23 @@ from .user_manager import UserManager, UserStatus
 
 def render_login_page():
     """Render the Google login page"""
+    # 上部スペース
+    st.markdown("<div style='height: 20vh'></div>", unsafe_allow_html=True)
+
+    # タイトルとサブタイトル（中央寄せ）
     st.markdown("""
-    <style>
-        .login-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            text-align: center;
-        }
-        .login-title {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #ffffff;
-            text-shadow: 2px 2px 0px #fe2c55, -2px -2px 0px #00f2ea;
-        }
-        .login-subtitle {
-            font-size: 1.2rem;
-            color: #888;
-            margin-bottom: 2rem;
-        }
-    </style>
-    <div class="login-container">
-        <h1 class="login-title">TikTok Re-Editor v3</h1>
-        <p class="login-subtitle">Googleアカウントでログインしてください</p>
+    <div style="text-align: center;">
+        <h1 style="font-size: 2.5rem; color: #ffffff; text-shadow: 2px 2px 0px #fe2c55, -2px -2px 0px #00f2ea; font-weight: bold;">
+            TikTok Re-Editor v3
+        </h1>
+        <p style="font-size: 1.2rem; color: #888; margin-bottom: 2rem;">
+            Googleアカウントでログインしてください
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # ボタン（中央寄せ）
+    col1, col2, col3 = st.columns([1.5, 1, 1.5])
     with col2:
         if st.button("🔐 Googleでログイン", use_container_width=True, type="primary"):
             st.login()
