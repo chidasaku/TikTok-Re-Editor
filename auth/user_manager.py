@@ -23,14 +23,14 @@ class UserManager:
 
     def get_user_by_google_id(self, google_id: str) -> Optional[Dict[str, Any]]:
         """Get user by Google ID"""
-        record = self.client.get_record_by_field("google_id", google_id)
+        record = self.client.get_record_by_field("GoogleID", google_id)
         if record:
             return self._record_to_user(record)
         return None
 
     def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email"""
-        record = self.client.get_record_by_field("email", email)
+        record = self.client.get_record_by_field("メールアドレス", email)
         if record:
             return self._record_to_user(record)
         return None
@@ -44,15 +44,15 @@ class UserManager:
         status = UserStatus.APPROVED if is_admin else UserStatus.PENDING
 
         fields = {
-            "google_id": google_id,
-            "email": email,
-            "real_name": real_name,
-            "nickname": nickname,
-            "status": status,
-            "is_admin": is_admin,
-            "created_at": now,
-            "last_login": now,
-            "login_count": 1
+            "GoogleID": google_id,
+            "メールアドレス": email,
+            "本名": real_name,
+            "ニックネーム": nickname,
+            "ステータス": status,
+            "管理者": is_admin,
+            "登録日時": now,
+            "最終ログイン": now,
+            "ログイン回数": 1
         }
 
         record = self.client.create_record(fields)
@@ -61,10 +61,10 @@ class UserManager:
     def update_last_login(self, google_id: str) -> None:
         """Update user's last login time and increment login count"""
         try:
-            record = self.client.get_record_by_field("google_id", google_id)
+            record = self.client.get_record_by_field("GoogleID", google_id)
             if record:
                 record_id = record["record_id"]
-                current_count = record.get("fields", {}).get("login_count")
+                current_count = record.get("fields", {}).get("ログイン回数")
                 # Handle None, empty string, or non-numeric values
                 if current_count is None or current_count == "":
                     current_count = 0
@@ -77,8 +77,8 @@ class UserManager:
                     current_count = int(current_count)
 
                 self.client.update_record(record_id, {
-                    "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "login_count": current_count + 1
+                    "最終ログイン": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "ログイン回数": current_count + 1
                 })
         except Exception:
             # Silently fail - login tracking is not critical
@@ -103,34 +103,34 @@ class UserManager:
 
     def ban_user(self, google_id: str, reason: str) -> bool:
         """Ban a user with reason"""
-        record = self.client.get_record_by_field("google_id", google_id)
+        record = self.client.get_record_by_field("GoogleID", google_id)
         if record:
             record_id = record["record_id"]
             self.client.update_record(record_id, {
-                "status": UserStatus.BANNED,
-                "ban_reason": reason
+                "ステータス": UserStatus.BANNED,
+                "BAN理由": reason
             })
             return True
         return False
 
     def unban_user(self, google_id: str) -> bool:
         """Unban a user"""
-        record = self.client.get_record_by_field("google_id", google_id)
+        record = self.client.get_record_by_field("GoogleID", google_id)
         if record:
             record_id = record["record_id"]
             self.client.update_record(record_id, {
-                "status": UserStatus.APPROVED,
-                "ban_reason": ""
+                "ステータス": UserStatus.APPROVED,
+                "BAN理由": ""
             })
             return True
         return False
 
     def set_admin(self, google_id: str, is_admin: bool) -> bool:
         """Set or remove admin status"""
-        record = self.client.get_record_by_field("google_id", google_id)
+        record = self.client.get_record_by_field("GoogleID", google_id)
         if record:
             record_id = record["record_id"]
-            self.client.update_record(record_id, {"is_admin": is_admin})
+            self.client.update_record(record_id, {"管理者": is_admin})
             return True
         return False
 
@@ -140,7 +140,7 @@ class UserManager:
             "conjunction": "and",
             "conditions": [
                 {
-                    "field_name": "status",
+                    "field_name": "ステータス",
                     "operator": "is",
                     "value": [status]
                 }
@@ -159,10 +159,10 @@ class UserManager:
         users = self.get_all_users()
         stats = {
             "total": len(users),
-            "pending": 0,
-            "approved": 0,
-            "rejected": 0,
-            "banned": 0,
+            UserStatus.PENDING: 0,
+            UserStatus.APPROVED: 0,
+            UserStatus.REJECTED: 0,
+            UserStatus.BANNED: 0,
             "admins": 0
         }
         for user in users:
@@ -175,10 +175,10 @@ class UserManager:
 
     def _update_status(self, google_id: str, status: str) -> bool:
         """Update user status"""
-        record = self.client.get_record_by_field("google_id", google_id)
+        record = self.client.get_record_by_field("GoogleID", google_id)
         if record:
             record_id = record["record_id"]
-            self.client.update_record(record_id, {"status": status})
+            self.client.update_record(record_id, {"ステータス": status})
             return True
         return False
 
@@ -187,14 +187,14 @@ class UserManager:
         fields = record.get("fields", {})
         return {
             "record_id": record.get("record_id"),
-            "google_id": fields.get("google_id", ""),
-            "email": fields.get("email", ""),
-            "real_name": fields.get("real_name", ""),
-            "nickname": fields.get("nickname", ""),
-            "status": fields.get("status", UserStatus.PENDING),
-            "is_admin": fields.get("is_admin", False),
-            "ban_reason": fields.get("ban_reason", ""),
-            "created_at": fields.get("created_at", ""),
-            "last_login": fields.get("last_login", ""),
-            "login_count": fields.get("login_count", 0)
+            "google_id": fields.get("GoogleID", ""),
+            "email": fields.get("メールアドレス", ""),
+            "real_name": fields.get("本名", ""),
+            "nickname": fields.get("ニックネーム", ""),
+            "status": fields.get("ステータス", UserStatus.PENDING),
+            "is_admin": fields.get("管理者", False),
+            "ban_reason": fields.get("BAN理由", ""),
+            "created_at": fields.get("登録日時", ""),
+            "last_login": fields.get("最終ログイン", ""),
+            "login_count": fields.get("ログイン回数", 0)
         }

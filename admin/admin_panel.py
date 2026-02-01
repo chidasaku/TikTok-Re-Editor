@@ -15,13 +15,13 @@ def render_admin_panel():
     # Display stats
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("承認待ち", stats["pending"])
+        st.metric("承認待ち", stats.get(UserStatus.PENDING, 0))
     with col2:
-        st.metric("承認済み", stats["approved"])
+        st.metric("承認済み", stats.get(UserStatus.APPROVED, 0))
     with col3:
-        st.metric("BAN", stats["banned"])
+        st.metric("BAN", stats.get(UserStatus.BANNED, 0))
     with col4:
-        st.metric("管理者", stats["admins"])
+        st.metric("管理者", stats.get("admins", 0))
 
     st.divider()
 
