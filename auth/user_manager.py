@@ -60,14 +60,29 @@ class UserManager:
 
     def update_last_login(self, google_id: str) -> None:
         """Update user's last login time and increment login count"""
-        record = self.client.get_record_by_field("google_id", google_id)
-        if record:
-            record_id = record["record_id"]
-            current_count = record.get("fields", {}).get("login_count", 0) or 0
-            self.client.update_record(record_id, {
-                "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "login_count": current_count + 1
-            })
+        try:
+            record = self.client.get_record_by_field("google_id", google_id)
+            if record:
+                record_id = record["record_id"]
+                current_count = record.get("fields", {}).get("login_count")
+                # Handle None, empty string, or non-numeric values
+                if current_count is None or current_count == "":
+                    current_count = 0
+                elif isinstance(current_count, str):
+                    try:
+                        current_count = int(current_count)
+                    except ValueError:
+                        current_count = 0
+                else:
+                    current_count = int(current_count)
+
+                self.client.update_record(record_id, {
+                    "last_login": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "login_count": current_count + 1
+                })
+        except Exception:
+            # Silently fail - login tracking is not critical
+            pass
 
     def is_admin(self, email: str) -> bool:
         """Check if user is admin"""
