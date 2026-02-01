@@ -5,8 +5,8 @@ from .user_manager import UserManager, UserStatus
 
 def render_login_page():
     """Render the Google login page"""
-    # 上部スペース
-    st.markdown("<div style='height: 20vh'></div>", unsafe_allow_html=True)
+    # 上部スペース（画面の35%）
+    st.markdown("<div style='height: 35vh'></div>", unsafe_allow_html=True)
 
     # タイトルとサブタイトル（中央寄せ）
     st.markdown("""
@@ -21,7 +21,7 @@ def render_login_page():
     """, unsafe_allow_html=True)
 
     # ボタン（中央寄せ）
-    col1, col2, col3 = st.columns([1.5, 1, 1.5])
+    col1, col2, col3 = st.columns([2, 1, 2])
     with col2:
         if st.button("🔐 Googleでログイン", use_container_width=True, type="primary"):
             st.login()
