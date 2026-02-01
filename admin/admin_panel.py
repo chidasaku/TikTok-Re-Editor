@@ -55,30 +55,26 @@ def _render_pending_users(user_manager: UserManager):
         st.info("承認待ちのユーザーはいません")
         return
 
+    # ヘッダー
+    cols = st.columns([1.5, 2, 2, 1, 1])
+    cols[0].markdown("**名前**")
+    cols[1].markdown("**メール**")
+    cols[2].markdown("**申請日**")
+    cols[3].markdown("")
+    cols[4].markdown("")
+
+    # データ行
     for user in pending_users:
-        with st.container():
-            col1, col2, col3 = st.columns([3, 1, 1])
-
-            with col1:
-                st.markdown(f"""
-                **{user['real_name']}** ({user['nickname']})
-                📧 {user['email']}
-                📅 申請日: {user['created_at']}
-                """)
-
-            with col2:
-                if st.button("✅ 承認", key=f"approve_{user['google_id']}", type="primary"):
-                    if user_manager.approve_user(user['google_id']):
-                        st.success(f"{user['nickname']}さんを承認しました")
-                        st.rerun()
-
-            with col3:
-                if st.button("❌ 却下", key=f"reject_{user['google_id']}"):
-                    if user_manager.reject_user(user['google_id']):
-                        st.warning(f"{user['nickname']}さんを却下しました")
-                        st.rerun()
-
-            st.divider()
+        cols = st.columns([1.5, 2, 2, 1, 1])
+        cols[0].write(f"{user['real_name']} ({user['nickname']})")
+        cols[1].write(user['email'])
+        cols[2].write(user['created_at'])
+        if cols[3].button("✅ 承認", key=f"approve_{user['google_id']}"):
+            if user_manager.approve_user(user['google_id']):
+                st.rerun()
+        if cols[4].button("❌ 却下", key=f"reject_{user['google_id']}"):
+            if user_manager.reject_user(user['google_id']):
+                st.rerun()
 
 
 def _render_approved_users(user_manager: UserManager):
@@ -91,50 +87,52 @@ def _render_approved_users(user_manager: UserManager):
         st.info("承認済みのユーザーはいません")
         return
 
+    # ヘッダー
+    cols = st.columns([1.5, 2, 1.5, 1.5, 0.8, 1, 1])
+    cols[0].markdown("**名前**")
+    cols[1].markdown("**メール**")
+    cols[2].markdown("**登録日**")
+    cols[3].markdown("**最終ログイン**")
+    cols[4].markdown("**回数**")
+    cols[5].markdown("")
+    cols[6].markdown("")
+
+    # データ行
     for user in approved_users:
-        with st.container():
-            col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+        cols = st.columns([1.5, 2, 1.5, 1.5, 0.8, 1, 1])
 
-            with col1:
-                admin_badge = "👑 " if user['is_admin'] else ""
-                st.markdown(f"""
-                {admin_badge}**{user['real_name']}** ({user['nickname']})
-                📧 {user['email']}
-                📅 登録日: {user['created_at']}
-                🕐 最終ログイン: {user['last_login']}
-                🔢 ログイン回数: {user['login_count']}
-                """)
+        # 名前（管理者バッジ付き）
+        admin_badge = "👑 " if user['is_admin'] else ""
+        cols[0].write(f"{admin_badge}{user['real_name']} ({user['nickname']})")
 
-            with col2:
-                # BAN button with reason input
-                with st.popover("🚫 BAN"):
-                    ban_reason = st.text_input(
-                        "BAN理由",
-                        key=f"ban_reason_{user['google_id']}",
-                        placeholder="理由を入力..."
-                    )
-                    if st.button("BANする", key=f"ban_{user['google_id']}", type="primary"):
-                        if ban_reason:
-                            if user_manager.ban_user(user['google_id'], ban_reason):
-                                st.success(f"{user['nickname']}さんをBANしました")
-                                st.rerun()
-                        else:
-                            st.error("BAN理由を入力してください")
+        cols[1].write(user['email'])
+        cols[2].write(user['created_at'][:10] if user['created_at'] else "")
+        cols[3].write(user['last_login'][:10] if user['last_login'] else "")
+        cols[4].write(str(user['login_count'] or 0))
 
-            with col3:
-                # Admin toggle
-                if user['is_admin']:
-                    if st.button("👑→👤", key=f"demote_{user['google_id']}", help="管理者権限を剥奪"):
-                        if user_manager.set_admin(user['google_id'], False):
-                            st.success(f"{user['nickname']}さんの管理者権限を剥奪しました")
-                            st.rerun()
+        # BAN button
+        with cols[5].popover("🚫 BAN"):
+            ban_reason = st.text_input(
+                "BAN理由",
+                key=f"ban_reason_{user['google_id']}",
+                placeholder="理由を入力..."
+            )
+            if st.button("BANする", key=f"ban_{user['google_id']}", type="primary"):
+                if ban_reason:
+                    if user_manager.ban_user(user['google_id'], ban_reason):
+                        st.rerun()
                 else:
-                    if st.button("👤→👑", key=f"promote_{user['google_id']}", help="管理者に昇格"):
-                        if user_manager.set_admin(user['google_id'], True):
-                            st.success(f"{user['nickname']}さんを管理者に昇格しました")
-                            st.rerun()
+                    st.error("理由を入力")
 
-            st.divider()
+        # Admin toggle
+        if user['is_admin']:
+            if cols[6].button("👑→👤", key=f"demote_{user['google_id']}", help="管理者権限を剥奪"):
+                if user_manager.set_admin(user['google_id'], False):
+                    st.rerun()
+        else:
+            if cols[6].button("👤→👑", key=f"promote_{user['google_id']}", help="管理者に昇格"):
+                if user_manager.set_admin(user['google_id'], True):
+                    st.rerun()
 
 
 def _render_banned_users(user_manager: UserManager):
@@ -150,29 +148,29 @@ def _render_banned_users(user_manager: UserManager):
         st.info("BAN/却下済みのユーザーはいません")
         return
 
+    # ヘッダー
+    cols = st.columns([1, 1.5, 2, 2, 1])
+    cols[0].markdown("**状態**")
+    cols[1].markdown("**名前**")
+    cols[2].markdown("**メール**")
+    cols[3].markdown("**理由**")
+    cols[4].markdown("")
+
+    # データ行
     for user in all_users:
-        with st.container():
-            col1, col2 = st.columns([4, 1])
+        cols = st.columns([1, 1.5, 2, 2, 1])
 
-            with col1:
-                status_label = "🚫 BAN" if user['status'] == UserStatus.BANNED else "❌ 却下"
-                reason = f"\n⚠️ 理由: {user['ban_reason']}" if user['ban_reason'] else ""
-                st.markdown(f"""
-                {status_label} **{user['real_name']}** ({user['nickname']})
-                📧 {user['email']}
-                📅 登録日: {user['created_at']}{reason}
-                """)
+        status_label = "🚫 BAN" if user['status'] == UserStatus.BANNED else "❌ 却下"
+        cols[0].write(status_label)
+        cols[1].write(f"{user['real_name']} ({user['nickname']})")
+        cols[2].write(user['email'])
+        cols[3].write(user['ban_reason'] or "-")
 
-            with col2:
-                if user['status'] == UserStatus.BANNED:
-                    if st.button("🔓 BAN解除", key=f"unban_{user['google_id']}"):
-                        if user_manager.unban_user(user['google_id']):
-                            st.success(f"{user['nickname']}さんのBANを解除しました")
-                            st.rerun()
-                else:
-                    if st.button("✅ 承認", key=f"approve_rejected_{user['google_id']}"):
-                        if user_manager.approve_user(user['google_id']):
-                            st.success(f"{user['nickname']}さんを承認しました")
-                            st.rerun()
-
-            st.divider()
+        if user['status'] == UserStatus.BANNED:
+            if cols[4].button("🔓 解除", key=f"unban_{user['google_id']}"):
+                if user_manager.unban_user(user['google_id']):
+                    st.rerun()
+        else:
+            if cols[4].button("✅ 承認", key=f"approve_rejected_{user['google_id']}"):
+                if user_manager.approve_user(user['google_id']):
+                    st.rerun()
