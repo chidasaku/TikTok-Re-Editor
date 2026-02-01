@@ -22,7 +22,7 @@ st.set_page_config(
 # ========================================
 # 認証チェック（Google OAuth + Lark Base）
 # ========================================
-from auth import check_auth, is_current_user_admin, render_user_menu
+from auth import check_auth, is_current_user_admin, get_current_user
 from admin import render_admin_panel
 
 # 管理者パネル表示フラグ
@@ -32,9 +32,6 @@ if "show_admin_panel" not in st.session_state:
 # 認証チェック（未承認の場合はここでstopされる）
 if not check_auth():
     st.stop()
-
-# ユーザーメニュー表示
-render_user_menu()
 
 # 管理者パネル表示
 if st.session_state.show_admin_panel and is_current_user_admin():
@@ -419,8 +416,25 @@ if 'gladia_words' not in st.session_state:
 if 'audio_upload_sns_content' not in st.session_state:
     st.session_state.audio_upload_sns_content = None
 
-# タイトル
-st.markdown('<h1 translate="no">TikTok Re-Editor v3</h1>', unsafe_allow_html=True)
+# タイトルとユーザーメニューを横並び
+header_col1, header_col2 = st.columns([4, 1])
+with header_col1:
+    st.markdown('<h1 translate="no">TikTok Re-Editor v3</h1>', unsafe_allow_html=True)
+with header_col2:
+    user = get_current_user()
+    if user:
+        is_admin = is_current_user_admin()
+        admin_badge = " 👑" if is_admin else ""
+        with st.popover(f"👤 {user['nickname']}{admin_badge}"):
+            st.markdown(f"**{user['email']}**")
+            st.markdown(f"ログイン: {user['login_count']}回")
+            if is_admin:
+                if st.button("🔧 管理者パネル", key="header_admin_btn", use_container_width=True):
+                    st.session_state.show_admin_panel = True
+                    st.rerun()
+            if st.button("🚪 ログアウト", key="header_logout_btn", use_container_width=True):
+                st.logout()
+
 st.markdown("文字起こし → 整形 → 音声アップロード → **透過動画生成**")
 
 # ===========================================
