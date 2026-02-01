@@ -65,24 +65,50 @@ class LarkBaseClient:
         data = response.json()
 
         if data.get("code") != 0:
-            raise Exception(f"Failed to search records: {data.get('msg')}")
+            error_code = data.get("code")
+            error_msg = data.get("msg", "Unknown error")
+            # 権限エラーや空テーブルの場合は空リストを返す
+            if error_code in [1254040, 1254041, 1254043]:  # Common permission/not found errors
+                return []
+            raise Exception(f"Failed to search records (code={error_code}): {error_msg}")
 
         return data.get("data", {}).get("items", [])
 
     def get_record_by_field(self, field_name: str, field_value: str) -> Optional[Dict[str, Any]]:
-        """Get a single record by field value"""
-        filter_condition = {
-            "conjunction": "and",
-            "conditions": [
-                {
-                    "field_name": field_name,
-                    "operator": "is",
-                    "value": [field_value]
-                }
-            ]
+        """Get a single record by field value using list API with filter"""
+        # Use list API instead of search API (lower permission requirements)
+        url = f"{self.BASE_URL}/bitable/v1/apps/{self.base_app_token}/tables/{self.table_id}/records"
+
+        params = {
+            "page_size": 500,
+            "filter": f'CurrentValue.[{field_name}]="{field_value}"'
         }
-        records = self.search_records(filter_condition)
-        return records[0] if records else None
+
+        try:
+            response = requests.get(url, headers=self._headers(), params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("code") != 0:
+                # If filter not supported, fall back to get all and filter manually
+                all_records = self.get_all_records()
+                for record in all_records:
+                    if record.get("fields", {}).get(field_name) == field_value:
+                        return record
+                return None
+
+            items = data.get("data", {}).get("items", [])
+            return items[0] if items else None
+        except Exception:
+            # Fall back to manual filtering
+            try:
+                all_records = self.get_all_records()
+                for record in all_records:
+                    if record.get("fields", {}).get(field_name) == field_value:
+                        return record
+            except Exception:
+                pass
+            return None
 
     def create_record(self, fields: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new record"""
@@ -127,23 +153,32 @@ class LarkBaseClient:
         all_records = []
         page_token = None
 
-        while True:
-            params = {"page_size": 500}
-            if page_token:
-                params["page_token"] = page_token
+        try:
+            while True:
+                params = {"page_size": 500}
+                if page_token:
+                    params["page_token"] = page_token
 
-            response = requests.get(url, headers=self._headers(), params=params)
-            response.raise_for_status()
-            data = response.json()
+                response = requests.get(url, headers=self._headers(), params=params)
+                response.raise_for_status()
+                data = response.json()
 
-            if data.get("code") != 0:
-                raise Exception(f"Failed to get records: {data.get('msg')}")
+                if data.get("code") != 0:
+                    error_code = data.get("code")
+                    error_msg = data.get("msg", "Unknown error")
+                    # Return empty list for permission or not found errors
+                    if error_code in [1254040, 1254041, 1254043, 1254044]:
+                        return []
+                    raise Exception(f"Failed to get records (code={error_code}): {error_msg}")
 
-            items = data.get("data", {}).get("items", [])
-            all_records.extend(items)
+                items = data.get("data", {}).get("items", [])
+                all_records.extend(items)
 
-            page_token = data.get("data", {}).get("page_token")
-            if not page_token or not data.get("data", {}).get("has_more"):
-                break
+                page_token = data.get("data", {}).get("page_token")
+                if not page_token or not data.get("data", {}).get("has_more"):
+                    break
+        except requests.exceptions.RequestException as e:
+            # Network error - return empty list
+            return []
 
         return all_records
