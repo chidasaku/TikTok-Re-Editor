@@ -182,19 +182,37 @@ class UserManager:
             return True
         return False
 
+    def _extract_value(self, field_value: Any) -> Any:
+        """Extract value from Lark Base field (handles rich text format)"""
+        if field_value is None:
+            return ""
+        # If it's a list of dicts with 'text' key (rich text format)
+        if isinstance(field_value, list):
+            texts = []
+            for item in field_value:
+                if isinstance(item, dict) and "text" in item:
+                    texts.append(item["text"])
+                else:
+                    texts.append(str(item))
+            return "".join(texts)
+        # If it's a dict with 'text' key
+        if isinstance(field_value, dict) and "text" in field_value:
+            return field_value["text"]
+        return field_value
+
     def _record_to_user(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Convert Lark Base record to user dict"""
         fields = record.get("fields", {})
         return {
             "record_id": record.get("record_id"),
-            "google_id": fields.get("GoogleID", ""),
-            "email": fields.get("メールアドレス", ""),
-            "real_name": fields.get("本名", ""),
-            "nickname": fields.get("ニックネーム", ""),
-            "status": fields.get("ステータス", UserStatus.PENDING),
+            "google_id": self._extract_value(fields.get("GoogleID", "")),
+            "email": self._extract_value(fields.get("メールアドレス", "")),
+            "real_name": self._extract_value(fields.get("本名", "")),
+            "nickname": self._extract_value(fields.get("ニックネーム", "")),
+            "status": self._extract_value(fields.get("ステータス", UserStatus.PENDING)),
             "is_admin": fields.get("管理者", False),
-            "ban_reason": fields.get("BAN理由", ""),
-            "created_at": fields.get("登録日時", ""),
-            "last_login": fields.get("最終ログイン", ""),
+            "ban_reason": self._extract_value(fields.get("BAN理由", "")),
+            "created_at": self._extract_value(fields.get("登録日時", "")),
+            "last_login": self._extract_value(fields.get("最終ログイン", "")),
             "login_count": fields.get("ログイン回数", 0)
         }
