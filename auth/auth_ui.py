@@ -5,8 +5,8 @@ from .user_manager import UserManager, UserStatus
 
 def render_login_page():
     """Render the Google login page"""
-    # 上部スペース（画面の35%）
-    st.markdown("<div style='height: 35vh'></div>", unsafe_allow_html=True)
+    # 上部スペース（画面の28%）
+    st.markdown("<div style='height: 28vh'></div>", unsafe_allow_html=True)
 
     # タイトルとサブタイトル（中央寄せ）
     st.markdown("""
