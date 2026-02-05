@@ -125,8 +125,8 @@ class VideoGeneratorFFmpeg:
                 char_w = bbox[2] - bbox[0]
                 char_h = bbox[3] - bbox[1]
 
-                # 文字を中央に配置した画像を作成
-                img_size = max(char_w, char_h) * 2
+                # 十分な大きさの画像を作成
+                img_size = font_size * 2
                 char_img = Image.new('RGBA', (img_size, img_size), (0, 0, 0, 0))
                 char_draw = ImageDraw.Draw(char_img)
 
@@ -135,12 +135,12 @@ class VideoGeneratorFFmpeg:
                 text_y = (img_size - char_h) // 2
                 char_draw.text((text_x, text_y), char, font=font, fill=(0, 0, 0, 255))
 
-                # 90度回転
-                char_img = char_img.rotate(90, expand=False, resample=Image.BICUBIC)
+                # 90度回転（中心を軸に）
+                char_img = char_img.rotate(90, expand=False, resample=Image.BICUBIC, center=(img_size // 2, img_size // 2))
 
-                # 回転後の画像を中央に配置
+                # 回転後の画像を中央に配置（他の文字と同じx_centerに）
                 paste_x = x_center - img_size // 2
-                paste_y = y_offset - (img_size - char_pitch) // 2
+                paste_y = y_offset
                 img.paste(char_img, (paste_x, paste_y), char_img)
                 y_offset += char_pitch
             elif is_small:
