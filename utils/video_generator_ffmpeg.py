@@ -138,12 +138,12 @@ class VideoGeneratorFFmpeg:
                     rotated_center_y = (rotated_bbox[1] + rotated_bbox[3]) // 2
                     # x方向：文字の中心をx_centerに
                     paste_x = x_center - rotated_center_x
-                    # y方向：文字の中心を文字スロットの中心に
+                    # y方向：文字の中心を文字スロットの中心に + 調整オフセット
                     slot_center_y = y_offset + char_pitch // 2
-                    paste_y = slot_center_y - rotated_center_y
+                    paste_y = slot_center_y - rotated_center_y + font_size // 4
                 else:
                     paste_x = x_center - img_size // 2
-                    paste_y = y_offset
+                    paste_y = y_offset + font_size // 4
 
                 img.paste(char_img, (paste_x, paste_y), char_img)
                 y_offset += char_pitch
