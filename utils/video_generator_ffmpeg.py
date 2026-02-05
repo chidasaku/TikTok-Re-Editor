@@ -120,12 +120,27 @@ class VideoGeneratorFFmpeg:
         for i, (char, needs_rotation, is_small) in enumerate(char_info):
             if needs_rotation:
                 # 長音記号を90度回転（中央配置）
-                char_img = Image.new('RGBA', (font_size * 2, font_size * 2), (0, 0, 0, 0))
+                # 文字のバウンディングボックスを取得
+                bbox = draw.textbbox((0, 0), char, font=font)
+                char_w = bbox[2] - bbox[0]
+                char_h = bbox[3] - bbox[1]
+
+                # 文字を中央に配置した画像を作成
+                img_size = max(char_w, char_h) * 2
+                char_img = Image.new('RGBA', (img_size, img_size), (0, 0, 0, 0))
                 char_draw = ImageDraw.Draw(char_img)
-                char_draw.text((font_size // 2, font_size // 2), char, font=font, fill=(0, 0, 0, 255))
-                char_img = char_img.rotate(90, expand=True, resample=Image.BICUBIC)
-                paste_x = x_center - font_size
-                paste_y = y_offset - font_size // 2  # 中央に配置
+
+                # 文字を画像の中央に描画
+                text_x = (img_size - char_w) // 2
+                text_y = (img_size - char_h) // 2
+                char_draw.text((text_x, text_y), char, font=font, fill=(0, 0, 0, 255))
+
+                # 90度回転
+                char_img = char_img.rotate(90, expand=False, resample=Image.BICUBIC)
+
+                # 回転後の画像を中央に配置
+                paste_x = x_center - img_size // 2
+                paste_y = y_offset - (img_size - char_pitch) // 2
                 img.paste(char_img, (paste_x, paste_y), char_img)
                 y_offset += char_pitch
             elif is_small:
