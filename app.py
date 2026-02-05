@@ -321,13 +321,21 @@ st.markdown("""
     }
 
     /* タブスタイル */
+    .stTabs {
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
     .stTabs [data-baseweb="tab-list"] {
         gap: 15px;
-        background: transparent !important;
+        background: #000000 !important;
         padding: 15px 10px 20px 10px;
         border: none !important;
         display: flex !important;
         flex-direction: row !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
     }
 
     .stTabs [data-baseweb="tab"] {
@@ -348,6 +356,8 @@ st.markdown("""
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        position: relative !important;
+        z-index: 101 !important;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
@@ -356,6 +366,12 @@ st.markdown("""
         color: #00f2ea !important;
         box-shadow: 0 0 40px rgba(0, 242, 234, 1) !important;
         transform: translateY(-3px) scale(1.02) !important;
+    }
+
+    /* タブパネルのオーバーレイ防止 */
+    .stTabs [data-baseweb="tab-panel"] {
+        position: relative !important;
+        z-index: 1 !important;
     }
 
     /* サクセスボックス - ピンク系 */
