@@ -505,7 +505,10 @@ with tab1:
         uploaded_file.seek(0)
         file_data = uploaded_file.read()
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+        # 元のファイル拡張子を維持
+        import os
+        file_ext = os.path.splitext(uploaded_file.name)[1] or ".mp4"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_file:
             tmp_file.write(file_data)
             tmp_file_path = tmp_file.name
 
@@ -559,6 +562,7 @@ with tab1:
                         st.error("文字起こしに失敗しました")
                 else:
                     st.error("ファイルアップロードに失敗しました")
+                    st.warning("考えられる原因: APIキーの有効期限切れ、ファイルサイズ制限、ネットワークエラー")
             finally:
                 # 処理完了後に一時ファイルを削除
                 if os.path.exists(tmp_file_path):
