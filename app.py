@@ -367,7 +367,13 @@ st.markdown("""
     }
 
     /* 処理中の画面暗転を無効化 */
-    [data-stale="true"] {
+    [data-stale="true"],
+    .stTabs [data-stale="true"],
+    .stTabs[data-stale="true"],
+    [data-testid="stTabs"][data-stale="true"],
+    .stTabs,
+    .stTabs [data-baseweb="tab-list"],
+    .stTabs [data-baseweb="tab"] {
         opacity: 1 !important;
     }
 </style>
