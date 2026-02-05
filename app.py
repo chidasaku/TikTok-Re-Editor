@@ -365,6 +365,24 @@ st.markdown("""
         border-radius: 10px !important;
         color: #ffffff !important;
     }
+
+    /* Streamlit処理中の画面暗転を無効化 */
+    .stApp > div[data-testid="stAppViewBlockContainer"]::before,
+    .stApp::before,
+    [data-testid="stAppViewBlockContainer"]::before {
+        display: none !important;
+    }
+
+    /* rerun時のオーバーレイを透明に */
+    .stApp > div:first-child::before {
+        opacity: 0 !important;
+        display: none !important;
+    }
+
+    /* スピナー背景のdimを無効化 */
+    div[data-stale="true"] {
+        opacity: 1 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
