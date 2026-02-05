@@ -143,9 +143,14 @@ class VideoGeneratorFFmpeg:
                 if rotated_bbox:
                     # 回転後の文字の中心を計算
                     rotated_center_x = (rotated_bbox[0] + rotated_bbox[2]) // 2
+                    rotated_center_y = (rotated_bbox[1] + rotated_bbox[3]) // 2
+                    rotated_height = rotated_bbox[3] - rotated_bbox[1]
+
                     # x_centerに文字の中心が来るようにpaste_xを調整
                     paste_x = x_center - rotated_center_x
-                    paste_y = y_offset - rotated_bbox[1]
+                    # y方向も文字スロットの中央に配置
+                    slot_center_y = y_offset + char_pitch // 2
+                    paste_y = slot_center_y - rotated_center_y
                 else:
                     paste_x = x_center - img_size // 2
                     paste_y = y_offset
