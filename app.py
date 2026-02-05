@@ -1148,7 +1148,13 @@ if st.session_state.formatted_text:
 
                 # Gladiaで音声のタイムスタンプを取得
                 if gladia_api_key:
-                    result = gladia.transcribe_from_file_with_timestamps(tmp_audio_path, language="ja")
+                    try:
+                        result = gladia.transcribe_from_file_with_timestamps(tmp_audio_path, language="ja")
+                    except Exception as e:
+                        st.error(f"Gladia API エラー: {e}")
+                        os.unlink(tmp_audio_path)
+                        st.stop()
+
                     if result and result.get("words"):
                         gladia_words = result["words"]
 
@@ -1200,7 +1206,15 @@ if st.session_state.formatted_text:
 
                         status_text.text(f"タイムスタンプ取得完了: {len(segments)}行")
                     else:
-                        st.error("タイムスタンプの取得に失敗しました")
+                        if result is None:
+                            st.error("タイムスタンプの取得に失敗しました（音声アップロードまたは文字起こしエラー）")
+                        elif not result.get("words"):
+                            st.error("タイムスタンプの取得に失敗しました（単語データが空です）")
+                            if result.get("segments"):
+                                st.warning(f"セグメントは取得できました: {len(result['segments'])}個")
+                        else:
+                            st.error("タイムスタンプの取得に失敗しました")
+                        st.warning("考えられる原因: APIキーの有効期限切れ、音声ファイル形式、ネットワークエラー")
                         os.unlink(tmp_audio_path)
                         st.stop()
                 else:
