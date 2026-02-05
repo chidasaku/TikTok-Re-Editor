@@ -365,6 +365,11 @@ st.markdown("""
         border-radius: 10px !important;
         color: #ffffff !important;
     }
+
+    /* 処理中の画面暗転を無効化 */
+    [data-stale="true"] {
+        opacity: 1 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
