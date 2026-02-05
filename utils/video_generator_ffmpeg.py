@@ -120,27 +120,36 @@ class VideoGeneratorFFmpeg:
         for i, (char, needs_rotation, is_small) in enumerate(char_info):
             if needs_rotation:
                 # 長音記号を90度回転（中央配置）
-                # 文字のバウンディングボックスを取得
-                bbox = draw.textbbox((0, 0), char, font=font)
-                char_w = bbox[2] - bbox[0]
-                char_h = bbox[3] - bbox[1]
-
                 # 十分な大きさの画像を作成
                 img_size = font_size * 2
                 char_img = Image.new('RGBA', (img_size, img_size), (0, 0, 0, 0))
                 char_draw = ImageDraw.Draw(char_img)
 
+                # 文字のバウンディングボックスを取得
+                bbox = char_draw.textbbox((0, 0), char, font=font)
+                char_w = bbox[2] - bbox[0]
+                char_h = bbox[3] - bbox[1]
+
                 # 文字を画像の中央に描画
-                text_x = (img_size - char_w) // 2
-                text_y = (img_size - char_h) // 2
+                text_x = (img_size - char_w) // 2 - bbox[0]
+                text_y = (img_size - char_h) // 2 - bbox[1]
                 char_draw.text((text_x, text_y), char, font=font, fill=(0, 0, 0, 255))
 
                 # 90度回転（中心を軸に）
-                char_img = char_img.rotate(90, expand=False, resample=Image.BICUBIC, center=(img_size // 2, img_size // 2))
+                char_img = char_img.rotate(90, expand=False, resample=Image.BICUBIC)
 
-                # 回転後の画像を中央に配置（他の文字と同じx_centerに）
-                paste_x = x_center - img_size // 2
-                paste_y = y_offset
+                # 回転後の文字の実際の位置を取得
+                rotated_bbox = char_img.getbbox()
+                if rotated_bbox:
+                    # 回転後の文字の中心を計算
+                    rotated_center_x = (rotated_bbox[0] + rotated_bbox[2]) // 2
+                    # x_centerに文字の中心が来るようにpaste_xを調整
+                    paste_x = x_center - rotated_center_x
+                    paste_y = y_offset - rotated_bbox[1]
+                else:
+                    paste_x = x_center - img_size // 2
+                    paste_y = y_offset
+
                 img.paste(char_img, (paste_x, paste_y), char_img)
                 y_offset += char_pitch
             elif is_small:
