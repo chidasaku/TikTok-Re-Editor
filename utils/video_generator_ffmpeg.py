@@ -131,10 +131,17 @@ class VideoGeneratorFFmpeg:
                 # 90度回転
                 char_img = char_img.rotate(90, expand=False, resample=Image.BICUBIC)
 
-                # 回転後も中心は img_size // 2 のまま
-                # x_centerに画像中心が来るように配置
-                paste_x = x_center - img_size // 2
-                paste_y = y_offset - img_size // 2 + char_pitch // 2
+                # 回転後の文字位置を取得
+                rotated_bbox = char_img.getbbox()
+                if rotated_bbox:
+                    # x_centerに文字の中心が来るように配置
+                    rotated_center_x = (rotated_bbox[0] + rotated_bbox[2]) // 2
+                    paste_x = x_center - rotated_center_x
+                    # 文字の上端をy_offsetに合わせる
+                    paste_y = y_offset - rotated_bbox[1]
+                else:
+                    paste_x = x_center - img_size // 2
+                    paste_y = y_offset
 
                 img.paste(char_img, (paste_x, paste_y), char_img)
                 y_offset += char_pitch
