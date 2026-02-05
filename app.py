@@ -382,22 +382,58 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Streamlit処理中の画面暗転を無効化 */
-    .stApp > div[data-testid="stAppViewBlockContainer"]::before,
+    /* ========================================
+       Streamlit処理中の画面暗転を完全無効化
+       ======================================== */
+
+    /* 全ての疑似要素オーバーレイを非表示 */
     .stApp::before,
-    [data-testid="stAppViewBlockContainer"]::before {
+    .stApp::after,
+    .stApp > div::before,
+    .stApp > div::after,
+    [data-testid="stAppViewContainer"]::before,
+    [data-testid="stAppViewContainer"]::after,
+    [data-testid="stAppViewBlockContainer"]::before,
+    [data-testid="stAppViewBlockContainer"]::after,
+    .main::before,
+    .main::after,
+    .block-container::before,
+    .block-container::after {
         display: none !important;
-    }
-
-    /* rerun時のオーバーレイを透明に */
-    .stApp > div:first-child::before {
         opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
+    /* stale状態（処理中）でも暗くしない */
+    div[data-stale="true"],
+    [data-stale="true"],
+    .stale {
+        opacity: 1 !important;
+        filter: none !important;
+    }
+
+    /* スピナーオーバーレイの背景を透明に */
+    .stSpinner > div,
+    [data-testid="stSpinner"] > div {
+        background: transparent !important;
+    }
+
+    /* element-containerの暗転防止 */
+    .element-container,
+    [data-testid="element-container"] {
+        opacity: 1 !important;
+    }
+
+    /* モーダル/オーバーレイの背景を無効化 */
+    div[role="dialog"]::before,
+    div[role="dialog"]::after {
         display: none !important;
     }
 
-    /* スピナー背景のdimを無効化 */
-    div[data-stale="true"] {
-        opacity: 1 !important;
+    /* Streamlit全体のフェード効果を無効化 */
+    .stApp * {
+        transition-property: transform, box-shadow, border, color, background-color !important;
     }
 </style>
 """, unsafe_allow_html=True)
