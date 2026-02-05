@@ -321,21 +321,13 @@ st.markdown("""
     }
 
     /* タブスタイル */
-    .stTabs {
-        position: relative !important;
-        z-index: 1 !important;
-    }
-
     .stTabs [data-baseweb="tab-list"] {
         gap: 15px;
-        background: #000000 !important;
+        background: transparent !important;
         padding: 15px 10px 20px 10px;
         border: none !important;
         display: flex !important;
         flex-direction: row !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 100 !important;
     }
 
     .stTabs [data-baseweb="tab"] {
@@ -356,8 +348,6 @@ st.markdown("""
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        position: relative !important;
-        z-index: 101 !important;
     }
 
     .stTabs [data-baseweb="tab"]:hover {
@@ -368,72 +358,12 @@ st.markdown("""
         transform: translateY(-3px) scale(1.02) !important;
     }
 
-    /* タブパネルのオーバーレイ防止 */
-    .stTabs [data-baseweb="tab-panel"] {
-        position: relative !important;
-        z-index: 1 !important;
-    }
-
     /* サクセスボックス - ピンク系 */
     .stSuccess {
         background: rgba(254, 44, 85, 0.1) !important;
         border: 2px solid rgba(254, 44, 85, 0.5) !important;
         border-radius: 10px !important;
         color: #ffffff !important;
-    }
-
-    /* ========================================
-       Streamlit処理中の画面暗転を完全無効化
-       ======================================== */
-
-    /* 全ての疑似要素オーバーレイを非表示 */
-    .stApp::before,
-    .stApp::after,
-    .stApp > div::before,
-    .stApp > div::after,
-    [data-testid="stAppViewContainer"]::before,
-    [data-testid="stAppViewContainer"]::after,
-    [data-testid="stAppViewBlockContainer"]::before,
-    [data-testid="stAppViewBlockContainer"]::after,
-    .main::before,
-    .main::after,
-    .block-container::before,
-    .block-container::after {
-        display: none !important;
-        opacity: 0 !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-    }
-
-    /* stale状態（処理中）でも暗くしない */
-    div[data-stale="true"],
-    [data-stale="true"],
-    .stale {
-        opacity: 1 !important;
-        filter: none !important;
-    }
-
-    /* スピナーオーバーレイの背景を透明に */
-    .stSpinner > div,
-    [data-testid="stSpinner"] > div {
-        background: transparent !important;
-    }
-
-    /* element-containerの暗転防止 */
-    .element-container,
-    [data-testid="element-container"] {
-        opacity: 1 !important;
-    }
-
-    /* モーダル/オーバーレイの背景を無効化 */
-    div[role="dialog"]::before,
-    div[role="dialog"]::after {
-        display: none !important;
-    }
-
-    /* Streamlit全体のフェード効果を無効化 */
-    .stApp * {
-        transition-property: transform, box-shadow, border, color, background-color !important;
     }
 </style>
 """, unsafe_allow_html=True)
