@@ -2,111 +2,110 @@
 chcp 932 > nul
 cd /d "%~dp0"
 echo ============================================
-echo   TikTok Re-Editor v3 ƒZƒbƒgƒAƒbƒv
+echo   TikTok Re-Editor v3 ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
 echo ============================================
 echo.
 
 REM ============================================
-REM 1. Python Embedded ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÆƒZƒbƒgƒAƒbƒv
+REM 1. Python Embedded ã®ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã¨ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
 REM ============================================
 if exist "python_embedded\python.exe" (
-    echo [OK] Python Embedded ‚ÍŠù‚ÉƒZƒbƒgƒAƒbƒvÏ‚Ý‚Å‚·
+    echo [OK] Python Embedded ã¯æ—¢ã«ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—æ¸ˆã¿ã§ã™
 ) else (
-    echo [1/4] Python ‚ðƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‚¢‚Ü‚·...
-    echo       i­X‚¨‘Ò‚¿‚­‚¾‚³‚¢j
+    echo [1/3] Python ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦ã„ã¾ã™...
+    echo       ï¼ˆå°‘ã€…ãŠå¾…ã¡ãã ã•ã„ï¼‰
     echo.
 
     mkdir python_embedded 2>nul
 
-    REM Python 3.11.9 Embeddable ‚ðƒ_ƒEƒ“ƒ[ƒh
+    REM Python 3.11.9 Embeddable ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰
     powershell -ExecutionPolicy Bypass -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip' -OutFile 'python_embedded\python.zip'}"
 
     if not exist "python_embedded\python.zip" (
-        echo [ƒGƒ‰[] Python ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½
-        echo ƒCƒ“ƒ^[ƒlƒbƒgÚ‘±‚ðŠm”F‚µ‚Ä‚­‚¾‚³‚¢
+        echo [ã‚¨ãƒ©ãƒ¼] Python ã®ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ
+        echo ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒƒãƒˆæŽ¥ç¶šã‚’ç¢ºèªã—ã¦ãã ã•ã„
         pause
         exit /b 1
     )
 
-    echo       ‰ð“€‚µ‚Ä‚¢‚Ü‚·...
+    echo       è§£å‡ã—ã¦ã„ã¾ã™...
     powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path 'python_embedded\python.zip' -DestinationPath 'python_embedded' -Force"
     del "python_embedded\python.zip"
 
-    REM pip ‚ð—LŒø‰»ipython311._pth ‚ð•ÒWj
+    REM pip ã‚’æœ‰åŠ¹åŒ–ï¼ˆpython311._pth ã‚’ç·¨é›†ï¼‰
     powershell -ExecutionPolicy Bypass -Command "(Get-Content 'python_embedded\python311._pth') -replace '#import site','import site' | Set-Content 'python_embedded\python311._pth'"
 
-    REM get-pip.py ‚ðƒ_ƒEƒ“ƒ[ƒh‚µ‚ÄŽÀs
-    echo       pip ‚ðƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚¢‚Ü‚·...
+    REM get-pip.py ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦å®Ÿè¡Œ
+    echo       pip ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ã„ã¾ã™...
     powershell -ExecutionPolicy Bypass -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile 'python_embedded\get-pip.py'}"
     python_embedded\python.exe python_embedded\get-pip.py --no-warn-script-location
     del "python_embedded\get-pip.py"
 
-    echo [OK] Python ‚ÌƒZƒbƒgƒAƒbƒv‚ªŠ®—¹‚µ‚Ü‚µ‚½
+    echo [OK] Python ã®ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ãŒå®Œäº†ã—ã¾ã—ãŸ
     echo.
 )
 
 REM ============================================
-REM 2. FFmpeg ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÆƒZƒbƒgƒAƒbƒv
+REM 2. FFmpeg ã®ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã¨ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—
 REM ============================================
 if exist "ffmpeg\ffmpeg.exe" (
-    echo [OK] FFmpeg ‚ÍŠù‚ÉƒZƒbƒgƒAƒbƒvÏ‚Ý‚Å‚·
+    echo [OK] FFmpeg ã¯æ—¢ã«ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—æ¸ˆã¿ã§ã™
 ) else (
-    echo [2/4] FFmpeg ‚ðƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‚¢‚Ü‚·...
-    echo       iƒtƒ@ƒCƒ‹ƒTƒCƒY‚ª‘å‚«‚¢‚½‚ßA”•ª‚©‚©‚éê‡‚ª‚ ‚è‚Ü‚·j
+    echo [2/3] FFmpeg ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦ã„ã¾ã™...
+    echo       ï¼ˆãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºãŒå¤§ãã„ãŸã‚ã€æ•°åˆ†ã‹ã‹ã‚‹å ´åˆãŒã‚ã‚Šã¾ã™ï¼‰
     echo.
 
     mkdir ffmpeg 2>nul
 
-    REM FFmpeg ‚ðƒ_ƒEƒ“ƒ[ƒh
+    REM FFmpeg ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰
     powershell -ExecutionPolicy Bypass -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip' -OutFile 'ffmpeg\ffmpeg.zip'}"
 
     if not exist "ffmpeg\ffmpeg.zip" (
-        echo [ƒGƒ‰[] FFmpeg ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½
-        echo ƒCƒ“ƒ^[ƒlƒbƒgÚ‘±‚ðŠm”F‚µ‚Ä‚­‚¾‚³‚¢
+        echo [ã‚¨ãƒ©ãƒ¼] FFmpeg ã®ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã«å¤±æ•—ã—ã¾ã—ãŸ
+        echo ã‚¤ãƒ³ã‚¿ãƒ¼ãƒãƒƒãƒˆæŽ¥ç¶šã‚’ç¢ºèªã—ã¦ãã ã•ã„
         pause
         exit /b 1
     )
 
-    echo       ‰ð“€‚µ‚Ä‚¢‚Ü‚·...
+    echo       è§£å‡ã—ã¦ã„ã¾ã™...
     powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path 'ffmpeg\ffmpeg.zip' -DestinationPath 'ffmpeg\temp' -Force"
 
-    REM ffmpeg.exe, ffprobe.exe ‚ðƒRƒs[
+    REM ffmpeg.exe, ffprobe.exe ã‚’ã‚³ãƒ”ãƒ¼
     for /d %%D in (ffmpeg\temp\ffmpeg-*) do (
         copy "%%D\bin\ffmpeg.exe" "ffmpeg\ffmpeg.exe" >nul
         copy "%%D\bin\ffprobe.exe" "ffmpeg\ffprobe.exe" >nul
     )
 
-    REM ˆêŽžƒtƒ@ƒCƒ‹‚ðíœ
+    REM ä¸€æ™‚ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‰Šé™¤
     rmdir /s /q "ffmpeg\temp" 2>nul
     del "ffmpeg\ffmpeg.zip" 2>nul
 
-    echo [OK] FFmpeg ‚ÌƒZƒbƒgƒAƒbƒv‚ªŠ®—¹‚µ‚Ü‚µ‚½
+    echo [OK] FFmpeg ã®ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ãŒå®Œäº†ã—ã¾ã—ãŸ
     echo.
 )
 
 REM ============================================
-REM 3. Python ƒpƒbƒP[ƒW‚ÌƒCƒ“ƒXƒg[ƒ‹
+REM 3. Python ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«
 REM ============================================
-echo [3/4] •K—v‚ÈƒpƒbƒP[ƒW‚ðƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚¢‚Ü‚·...
-echo       i­X‚¨‘Ò‚¿‚­‚¾‚³‚¢j
+echo [3/3] å¿…è¦ãªãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ã„ã¾ã™...
+echo       ï¼ˆå°‘ã€…ãŠå¾…ã¡ãã ã•ã„ï¼‰
 echo.
 python_embedded\python.exe -m pip install -r requirements.txt --no-warn-script-location
 
 echo.
-echo [OK] ƒpƒbƒP[ƒW‚ÌƒCƒ“ƒXƒg[ƒ‹‚ªŠ®—¹‚µ‚Ü‚µ‚½
+echo [OK] ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ãŒå®Œäº†ã—ã¾ã—ãŸ
 echo.
 
 REM ============================================
-REM 4. Š®—¹
+REM å®Œäº†
 REM ============================================
 echo.
 echo ============================================
-echo   ƒZƒbƒgƒAƒbƒvŠ®—¹I
+echo   ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—å®Œäº†ï¼
 echo ============================================
 echo.
-echo   ŽŸ‚ÌƒXƒeƒbƒv:
-echo   1. VOICEVOX‚ðƒCƒ“ƒXƒg[ƒ‹: https://voicevox.hiroshiba.jp/
-echo   2. u‹N“®.batv‚ðƒ_ƒuƒ‹ƒNƒŠƒbƒN‚µ‚Ä‹N“®
+echo   æ¬¡ã®ã‚¹ãƒ†ãƒƒãƒ—:
+echo   ã€Œèµ·å‹•.batã€ã‚’ãƒ€ãƒ–ãƒ«ã‚¯ãƒªãƒƒã‚¯ã—ã¦èµ·å‹•
 echo.
 echo ============================================
 echo.

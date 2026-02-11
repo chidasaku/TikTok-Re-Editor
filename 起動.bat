@@ -3,29 +3,27 @@ chcp 932 > nul
 cd /d "%~dp0"
 
 echo ======================================
-echo   TikTok Re-Editor v3 ‚ð‹N“®’†...
+echo   TikTok Re-Editor v3 ã‚’èµ·å‹•ä¸­...
 echo ======================================
 echo.
-echo ¦ VOICEVOXƒAƒvƒŠ‚ð‹N“®‚µ‚Ä‚¨‚¢‚Ä‚­‚¾‚³‚¢
-echo.
 
-REM FFmpeg‚ÌƒpƒX‚ð’Ç‰ÁiƒAƒvƒŠƒtƒHƒ‹ƒ_“àj
+REM FFmpegã®ãƒ‘ã‚¹ã‚’è¿½åŠ ï¼ˆã‚¢ãƒ—ãƒªãƒ•ã‚©ãƒ«ãƒ€å†…ï¼‰
 if exist "ffmpeg\ffmpeg.exe" (
     set "PATH=%~dp0ffmpeg;%PATH%"
 )
 
-REM ƒ[ƒJƒ‹Python‚ð—Dæ
+REM ãƒ­ãƒ¼ã‚«ãƒ«Pythonã‚’å„ªå…ˆ
 if exist "python_embedded\python.exe" (
-    echo Python: ƒ[ƒJƒ‹”Å‚ðŽg—p
+    echo Python: ãƒ­ãƒ¼ã‚«ãƒ«ç‰ˆã‚’ä½¿ç”¨
     python_embedded\python.exe --version
     echo.
     python_embedded\python.exe -m streamlit run app.py --server.headless=false
 ) else (
-    REM ƒVƒXƒeƒ€Python‚ÉƒtƒH[ƒ‹ƒoƒbƒN
+    REM ã‚·ã‚¹ãƒ†ãƒ Pythonã«ãƒ•ã‚©ãƒ¼ãƒ«ãƒãƒƒã‚¯
     python --version > nul 2>&1
     if %errorlevel% neq 0 (
-        echo ƒGƒ‰[: Python‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ
-        echo uƒCƒ“ƒXƒg[ƒ‹.batv‚ðæ‚ÉŽÀs‚µ‚Ä‚­‚¾‚³‚¢
+        echo ã‚¨ãƒ©ãƒ¼: PythonãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“
+        echo ã€Œã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«.batã€ã‚’å…ˆã«å®Ÿè¡Œã—ã¦ãã ã•ã„
         echo.
         pause
         exit /b 1
@@ -35,16 +33,15 @@ if exist "python_embedded\python.exe" (
     python -m streamlit run app.py --server.headless=false
 )
 
-REM ƒGƒ‰[‚ª”­¶‚µ‚½ê‡
+REM ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ãŸå ´åˆ
 if %errorlevel% neq 0 (
     echo.
     echo ======================================
-    echo   ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½
+    echo   ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸ
     echo ======================================
     echo.
-    echo ˆÈ‰º‚ðŠm”F‚µ‚Ä‚­‚¾‚³‚¢:
-    echo 1. uƒCƒ“ƒXƒg[ƒ‹.batv‚ðŽÀs‚µ‚Ü‚µ‚½‚©H
-    echo 2. VOICEVOX‚Í‹N“®‚µ‚Ä‚¢‚Ü‚·‚©H
+    echo ä»¥ä¸‹ã‚’ç¢ºèªã—ã¦ãã ã•ã„:
+    echo 1. ã€Œã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«.batã€ã‚’å®Ÿè¡Œã—ã¾ã—ãŸã‹ï¼Ÿ
     echo.
 )
 

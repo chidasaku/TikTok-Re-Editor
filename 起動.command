@@ -5,7 +5,6 @@ echo "======================================"
 echo "  TikTok Re-Editor v3 を起動中..."
 echo "======================================"
 echo ""
-echo "※ VOICEVOXアプリを起動しておいてください"
 echo ""
 
 # Pythonのパスを確認
@@ -37,7 +36,6 @@ if [ $? -ne 0 ]; then
     echo ""
     echo "以下を確認してください:"
     echo "1. pip install -r requirements.txt を実行しましたか？"
-    echo "2. VOICEVOXは起動していますか？"
     echo ""
     echo "何かキーを押すと終了します..."
     read -n 1

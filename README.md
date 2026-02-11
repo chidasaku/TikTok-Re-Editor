@@ -7,7 +7,7 @@ TikTok向けの透過動画を自動生成するWebアプリケーションで�
 
 ## Web版を使う（推奨）
 
-**アプリURL**: https://tiktok-re-editor.streamlit.app/
+**アプリURL**: https://tiktok-re-editor-nlbqc9ggejy5vmr47kzrj8.streamlit.app/
 
 ### 必要なもの（APIキー）
 
