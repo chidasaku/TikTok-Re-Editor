@@ -1,40 +1,50 @@
 @echo off
-chcp 65001 > nul
+chcp 932 > nul
 cd /d "%~dp0"
 
 echo ======================================
-echo   TikTok Re-Editor v3 ã‚’èµ·å‹•ä¸­...
+echo   TikTok Re-Editor v3 ‚ğ‹N“®’†...
 echo ======================================
 echo.
-echo â€» VOICEVOXã‚¢ãƒ—ãƒªã‚’èµ·å‹•ã—ã¦ãŠã„ã¦ãã ã•ã„
+echo ¦ VOICEVOXƒAƒvƒŠ‚ğ‹N“®‚µ‚Ä‚¨‚¢‚Ä‚­‚¾‚³‚¢
 echo.
 
-REM Pythonã®ç¢ºèª
-python --version > nul 2>&1
-if %errorlevel% neq 0 (
-    echo ã‚¨ãƒ©ãƒ¼: PythonãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“
-    echo Pythonã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ãã ã•ã„: https://www.python.org/
-    echo.
-    pause
-    exit /b 1
+REM FFmpeg‚ÌƒpƒX‚ğ’Ç‰ÁiƒAƒvƒŠƒtƒHƒ‹ƒ_“àj
+if exist "ffmpeg\ffmpeg.exe" (
+    set "PATH=%~dp0ffmpeg;%PATH%"
 )
 
-python --version
-echo.
+REM ƒ[ƒJƒ‹Python‚ğ—Dæ
+if exist "python_embedded\python.exe" (
+    echo Python: ƒ[ƒJƒ‹”Å‚ğg—p
+    python_embedded\python.exe --version
+    echo.
+    python_embedded\python.exe -m streamlit run app.py --server.headless=false
+) else (
+    REM ƒVƒXƒeƒ€Python‚ÉƒtƒH[ƒ‹ƒoƒbƒN
+    python --version > nul 2>&1
+    if %errorlevel% neq 0 (
+        echo ƒGƒ‰[: Python‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ
+        echo uƒCƒ“ƒXƒg[ƒ‹.batv‚ğæ‚ÉÀs‚µ‚Ä‚­‚¾‚³‚¢
+        echo.
+        pause
+        exit /b 1
+    )
+    python --version
+    echo.
+    python -m streamlit run app.py --server.headless=false
+)
 
-REM Streamlitã‚’å®Ÿè¡Œï¼ˆãƒ–ãƒ©ã‚¦ã‚¶ã‚’è‡ªå‹•ã§é–‹ãï¼‰
-python -m streamlit run app.py --server.headless=false
-
-REM ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ãŸå ´åˆ
+REM ƒGƒ‰[‚ª”­¶‚µ‚½ê‡
 if %errorlevel% neq 0 (
     echo.
     echo ======================================
-    echo   ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ã¾ã—ãŸ
+    echo   ƒGƒ‰[‚ª”­¶‚µ‚Ü‚µ‚½
     echo ======================================
     echo.
-    echo ä»¥ä¸‹ã‚’ç¢ºèªã—ã¦ãã ã•ã„:
-    echo 1. pip install -r requirements.txt ã‚’å®Ÿè¡Œã—ã¾ã—ãŸã‹ï¼Ÿ
-    echo 2. VOICEVOXã¯èµ·å‹•ã—ã¦ã„ã¾ã™ã‹ï¼Ÿ
+    echo ˆÈ‰º‚ğŠm”F‚µ‚Ä‚­‚¾‚³‚¢:
+    echo 1. uƒCƒ“ƒXƒg[ƒ‹.batv‚ğÀs‚µ‚Ü‚µ‚½‚©H
+    echo 2. VOICEVOX‚Í‹N“®‚µ‚Ä‚¢‚Ü‚·‚©H
     echo.
 )
 

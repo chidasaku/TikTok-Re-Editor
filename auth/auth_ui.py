@@ -183,11 +183,24 @@ def render_banned_page(nickname: str, reason: str):
         st.logout()
 
 
+def _is_cloud_environment():
+    """Check if running on Streamlit Cloud (with auth provider configured)"""
+    try:
+        _ = st.user.is_logged_in
+        return True
+    except AttributeError:
+        return False
+
+
 def check_auth():
     """
     Check authentication status and render appropriate UI.
     Returns True if user is authenticated and approved, False otherwise.
     """
+    # ローカル実行時（認証プロバイダーなし）は認証をスキップ
+    if not _is_cloud_environment():
+        return True
+
     # Check if user is logged in via st.login (Streamlit 1.42+)
     if not st.user.is_logged_in:
         render_login_page()
@@ -236,6 +249,8 @@ def check_auth():
 
 def get_current_user():
     """Get the current logged-in user info"""
+    if not _is_cloud_environment():
+        return None
     if not st.user.is_logged_in:
         return None
 

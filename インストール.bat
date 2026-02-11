@@ -1,50 +1,113 @@
 @echo off
-chcp 65001 > nul
-echo ============================================
-echo TikTok Re-Editor v3 ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«
-echo ============================================
-echo.
-
+chcp 932 > nul
 cd /d "%~dp0"
+echo ============================================
+echo   TikTok Re-Editor v3 ƒZƒbƒgƒAƒbƒv
+echo ============================================
+echo.
 
-REM Pythonã®ç¢ºèª
-python --version > nul 2>&1
-if errorlevel 1 (
-    echo [ã‚¨ãƒ©ãƒ¼] PythonãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ã¾ã›ã‚“
-    echo https://www.python.org/downloads/ ã‹ã‚‰ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦ãã ã•ã„
-    echo ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«æ™‚ã«ã€ŒAdd Python to PATHã€ã«ãƒã‚§ãƒƒã‚¯ã‚’å…¥ã‚Œã¦ãã ã•ã„
-    pause
-    exit /b 1
-)
+REM ============================================
+REM 1. Python Embedded ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÆƒZƒbƒgƒAƒbƒv
+REM ============================================
+if exist "python_embedded\python.exe" (
+    echo [OK] Python Embedded ‚ÍŠù‚ÉƒZƒbƒgƒAƒbƒvÏ‚Ý‚Å‚·
+) else (
+    echo [1/4] Python ‚ðƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‚¢‚Ü‚·...
+    echo       i­X‚¨‘Ò‚¿‚­‚¾‚³‚¢j
+    echo.
 
-REM FFmpegã®ç¢ºèª
-ffmpeg -version > nul 2>&1
-if errorlevel 1 (
-    echo [è­¦å‘Š] FFmpegãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ã¾ã›ã‚“
-    echo https://ffmpeg.org/download.html ã‹ã‚‰ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦ãã ã•ã„
+    mkdir python_embedded 2>nul
+
+    REM Python 3.11.9 Embeddable ‚ðƒ_ƒEƒ“ƒ[ƒh
+    powershell -ExecutionPolicy Bypass -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.11.9/python-3.11.9-embed-amd64.zip' -OutFile 'python_embedded\python.zip'}"
+
+    if not exist "python_embedded\python.zip" (
+        echo [ƒGƒ‰[] Python ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½
+        echo ƒCƒ“ƒ^[ƒlƒbƒgÚ‘±‚ðŠm”F‚µ‚Ä‚­‚¾‚³‚¢
+        pause
+        exit /b 1
+    )
+
+    echo       ‰ð“€‚µ‚Ä‚¢‚Ü‚·...
+    powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path 'python_embedded\python.zip' -DestinationPath 'python_embedded' -Force"
+    del "python_embedded\python.zip"
+
+    REM pip ‚ð—LŒø‰»ipython311._pth ‚ð•ÒWj
+    powershell -ExecutionPolicy Bypass -Command "(Get-Content 'python_embedded\python311._pth') -replace '#import site','import site' | Set-Content 'python_embedded\python311._pth'"
+
+    REM get-pip.py ‚ðƒ_ƒEƒ“ƒ[ƒh‚µ‚ÄŽÀs
+    echo       pip ‚ðƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚¢‚Ü‚·...
+    powershell -ExecutionPolicy Bypass -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://bootstrap.pypa.io/get-pip.py' -OutFile 'python_embedded\get-pip.py'}"
+    python_embedded\python.exe python_embedded\get-pip.py --no-warn-script-location
+    del "python_embedded\get-pip.py"
+
+    echo [OK] Python ‚ÌƒZƒbƒgƒAƒbƒv‚ªŠ®—¹‚µ‚Ü‚µ‚½
     echo.
 )
 
-REM å¿…è¦ãªãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«
-echo.
-echo Pythonãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¦ã„ã¾ã™...
-pip install -r requirements.txt
-
-REM .envãƒ•ã‚¡ã‚¤ãƒ«ã®ä½œæˆ
-if not exist .env (
+REM ============================================
+REM 2. FFmpeg ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÆƒZƒbƒgƒAƒbƒv
+REM ============================================
+if exist "ffmpeg\ffmpeg.exe" (
+    echo [OK] FFmpeg ‚ÍŠù‚ÉƒZƒbƒgƒAƒbƒvÏ‚Ý‚Å‚·
+) else (
+    echo [2/4] FFmpeg ‚ðƒ_ƒEƒ“ƒ[ƒh‚µ‚Ä‚¢‚Ü‚·...
+    echo       iƒtƒ@ƒCƒ‹ƒTƒCƒY‚ª‘å‚«‚¢‚½‚ßA”•ª‚©‚©‚éê‡‚ª‚ ‚è‚Ü‚·j
     echo.
-    echo .envãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œæˆã—ã¦ã„ã¾ã™...
-    copy .env.example .env
+
+    mkdir ffmpeg 2>nul
+
+    REM FFmpeg ‚ðƒ_ƒEƒ“ƒ[ƒh
+    powershell -ExecutionPolicy Bypass -Command "& {[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; Invoke-WebRequest -Uri 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip' -OutFile 'ffmpeg\ffmpeg.zip'}"
+
+    if not exist "ffmpeg\ffmpeg.zip" (
+        echo [ƒGƒ‰[] FFmpeg ‚Ìƒ_ƒEƒ“ƒ[ƒh‚ÉŽ¸”s‚µ‚Ü‚µ‚½
+        echo ƒCƒ“ƒ^[ƒlƒbƒgÚ‘±‚ðŠm”F‚µ‚Ä‚­‚¾‚³‚¢
+        pause
+        exit /b 1
+    )
+
+    echo       ‰ð“€‚µ‚Ä‚¢‚Ü‚·...
+    powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path 'ffmpeg\ffmpeg.zip' -DestinationPath 'ffmpeg\temp' -Force"
+
+    REM ffmpeg.exe, ffprobe.exe ‚ðƒRƒs[
+    for /d %%D in (ffmpeg\temp\ffmpeg-*) do (
+        copy "%%D\bin\ffmpeg.exe" "ffmpeg\ffmpeg.exe" >nul
+        copy "%%D\bin\ffprobe.exe" "ffmpeg\ffprobe.exe" >nul
+    )
+
+    REM ˆêŽžƒtƒ@ƒCƒ‹‚ðíœ
+    rmdir /s /q "ffmpeg\temp" 2>nul
+    del "ffmpeg\ffmpeg.zip" 2>nul
+
+    echo [OK] FFmpeg ‚ÌƒZƒbƒgƒAƒbƒv‚ªŠ®—¹‚µ‚Ü‚µ‚½
+    echo.
 )
 
+REM ============================================
+REM 3. Python ƒpƒbƒP[ƒW‚ÌƒCƒ“ƒXƒg[ƒ‹
+REM ============================================
+echo [3/4] •K—v‚ÈƒpƒbƒP[ƒW‚ðƒCƒ“ƒXƒg[ƒ‹‚µ‚Ä‚¢‚Ü‚·...
+echo       i­X‚¨‘Ò‚¿‚­‚¾‚³‚¢j
+echo.
+python_embedded\python.exe -m pip install -r requirements.txt --no-warn-script-location
+
+echo.
+echo [OK] ƒpƒbƒP[ƒW‚ÌƒCƒ“ƒXƒg[ƒ‹‚ªŠ®—¹‚µ‚Ü‚µ‚½
+echo.
+
+REM ============================================
+REM 4. Š®—¹
+REM ============================================
 echo.
 echo ============================================
-echo ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å®Œäº†ï¼
+echo   ƒZƒbƒgƒAƒbƒvŠ®—¹I
 echo ============================================
 echo.
-echo æ¬¡ã®ã‚¹ãƒ†ãƒƒãƒ—:
-echo 1. VOICEVOXã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«: https://voicevox.hiroshiba.jp/
-echo 2. .envãƒ•ã‚¡ã‚¤ãƒ«ã«APIã‚­ãƒ¼ã‚’è¨­å®šï¼ˆä»»æ„ï¼‰
-echo 3. ã€Œèµ·å‹•.batã€ã‚’ãƒ€ãƒ–ãƒ«ã‚¯ãƒªãƒƒã‚¯ã—ã¦èµ·å‹•
+echo   ŽŸ‚ÌƒXƒeƒbƒv:
+echo   1. VOICEVOX‚ðƒCƒ“ƒXƒg[ƒ‹: https://voicevox.hiroshiba.jp/
+echo   2. u‹N“®.batv‚ðƒ_ƒuƒ‹ƒNƒŠƒbƒN‚µ‚Ä‹N“®
+echo.
+echo ============================================
 echo.
 pause
