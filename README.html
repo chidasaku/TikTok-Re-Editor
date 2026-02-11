@@ -425,7 +425,7 @@
                     <p><strong>ダウンロードリンク</strong>: <a href="https://pjp6vm1896tv.jp.larksuite.com/drive/folder/HdEMfEuG0lDHOcdH53MjdJU9pze" target="_blank">https://pjp6vm1896tv.jp.larksuite.com/drive/folder/HdEMfEuG0lDHOcdH53MjdJU9pze</a></p>
                     <div class="note">
                         <div class="note-title">ポイント</div>
-                        このZIPファイルには、アプリ本体と自動セットアップスクリプトが含まれています。Python・FFmpegは「インストール.bat」の実行時に自動でダウンロードされます。
+                        このZIPファイルには、アプリ本体と自動セットアップスクリプトが含まれています。Python・FFmpegはインストールスクリプト（Windows: <code>インストール.bat</code> / Mac: <code>インストール.command</code>）の実行時に自動でインストールされます。
                     </div>
                 </div>
             </div>
@@ -434,6 +434,7 @@
                 <div class="step-number">2</div>
                 <div class="step-content">
                     <h4>ZIPファイルを展開する</h4>
+                    <h4 style="font-size: 1em; margin: 15px 0 8px 0;">▼ Windowsの場合</h4>
                     <ol>
                         <li>ダウンロードした <code>TikTok-Re-Editor-v3.zip</code> を<strong>右クリック</strong>します</li>
                         <li><strong>「すべて展開」</strong>を選択します</li>
@@ -443,13 +444,20 @@
                         <div class="important-title">ご注意</div>
                         ZIPファイルをダブルクリックして中身を直接開くのではなく、必ず<strong>「すべて展開」</strong>してからご利用ください。展開せずに実行するとエラーになる場合があります。
                     </div>
+                    <h4 style="font-size: 1em; margin: 15px 0 8px 0;">▼ Macの場合</h4>
+                    <ol>
+                        <li>ダウンロードした <code>TikTok-Re-Editor-v3.zip</code> を<strong>ダブルクリック</strong>します</li>
+                        <li>自動的にフォルダが展開されます</li>
+                        <li>展開されたフォルダをお好きな場所に移動してください（例: デスクトップなど）</li>
+                    </ol>
                 </div>
             </div>
 
             <div class="step">
                 <div class="step-number">3</div>
                 <div class="step-content">
-                    <h4>「インストール.bat」を実行する</h4>
+                    <h4>インストールスクリプトを実行する</h4>
+                    <h4 style="font-size: 1em; margin: 15px 0 8px 0;">▼ Windowsの場合</h4>
                     <p>展開したフォルダの中にある <code>インストール.bat</code> をダブルクリックしてください。</p>
                     <p>以下が<strong>自動的に</strong>行われます（インターネット接続が必要です）:</p>
                     <ol>
@@ -464,6 +472,23 @@
                             <li>初回のみ数分かかります（FFmpegのダウンロードに時間がかかる場合があります）</li>
                             <li>2回目以降は、すでにセットアップ済みの項目はスキップされます</li>
                             <li>途中で「WindowsによってPCが保護されました」と表示された場合は、「詳細情報」→「実行」をクリックしてください</li>
+                        </ul>
+                    </div>
+                    <h4 style="font-size: 1em; margin: 15px 0 8px 0;">▼ Macの場合</h4>
+                    <p>展開したフォルダの中にある <code>インストール.command</code> をダブルクリックしてください。</p>
+                    <p>以下が<strong>自動的に</strong>行われます（インターネット接続が必要です）:</p>
+                    <ol>
+                        <li><strong>Homebrew</strong> のインストール（未インストールの場合）</li>
+                        <li><strong>Python・FFmpeg</strong> のインストール（Homebrew経由）</li>
+                        <li><strong>必要なパッケージ</strong>のインストール</li>
+                    </ol>
+                    <p>「インストール完了！」と表示されたら完了です。</p>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        <ul>
+                            <li>初回実行時に「"インストール.command"は開発元が未確認のため開けません」と表示された場合は、<strong>右クリック → 「開く」</strong>を選択してください</li>
+                            <li>Homebrewの初回インストールには数分かかる場合があります</li>
+                            <li>途中でMacのパスワード入力を求められる場合があります</li>
                         </ul>
                     </div>
                 </div>
@@ -488,7 +513,7 @@
                     <h4>アプリを起動する</h4>
                     <ol>
                         <li><strong>VOICEVOXを起動</strong>しておきます</li>
-                        <li>展開したフォルダの中にある <code>起動.bat</code> を<strong>ダブルクリック</strong>します</li>
+                        <li>展開したフォルダの中にある <code>起動.bat</code>（Windows）または <code>起動.command</code>（Mac）を<strong>ダブルクリック</strong>します</li>
                         <li>自動的にブラウザが開き、アプリが表示されます</li>
                     </ol>
                 </div>
@@ -927,6 +952,7 @@
             <div class="troubleshoot-item">
                 <h4>動画が生成されない</h4>
                 <p>FFmpegが正しくインストールされていない可能性があります。以下の手順で確認してください。</p>
+                <h4 style="font-size: 0.95em; margin: 10px 0 5px 0;">▼ Windowsの場合</h4>
                 <ol>
                     <li>まず<strong>「インストール.bat」を再度実行</strong>してください。FFmpegが未インストールの場合は自動でダウンロードされます</li>
                     <li>それでも解決しない場合は、以下の手順でFFmpegの状態を確認します:
@@ -937,6 +963,12 @@
                         </ul>
                     </li>
                     <li>上記を確認しても動画が生成されない場合は、<strong>アプリを一度閉じて「起動.bat」で再起動</strong>してみてください</li>
+                </ol>
+                <h4 style="font-size: 0.95em; margin: 10px 0 5px 0;">▼ Macの場合</h4>
+                <ol>
+                    <li>ターミナルで <code>ffmpeg -version</code> を実行して、FFmpegがインストールされているか確認してください</li>
+                    <li>インストールされていない場合は、<strong>「インストール.command」を再度実行</strong>するか、ターミナルで <code>brew install ffmpeg</code> を実行してください</li>
+                    <li>上記を確認しても動画が生成されない場合は、<strong>アプリを一度閉じて「起動.command」で再起動</strong>してみてください</li>
                 </ol>
             </div>
             <div class="troubleshoot-item">
@@ -954,11 +986,19 @@
                 </ul>
             </div>
             <div class="troubleshoot-item">
-                <h4>「WindowsによってPCが保護されました」と表示される</h4>
+                <h4>「WindowsによってPCが保護されました」と表示される（Windows）</h4>
                 <ul>
                     <li>「詳細情報」をクリックしてください</li>
                     <li>「実行」ボタンが表示されますので、クリックして進めてください</li>
                     <li>これはWindows標準のセキュリティ警告で、問題ありません</li>
+                </ul>
+            </div>
+            <div class="troubleshoot-item">
+                <h4>「開発元が未確認のため開けません」と表示される（Mac）</h4>
+                <ul>
+                    <li><code>.command</code> ファイルを<strong>右クリック</strong>して<strong>「開く」</strong>を選択してください</li>
+                    <li>確認ダイアログが出たら「開く」をクリックしてください</li>
+                    <li>一度開くと、次回以降はダブルクリックで実行できます</li>
                 </ul>
             </div>
         </div>
