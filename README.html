@@ -150,6 +150,9 @@
 
         .step-content {
             flex: 1;
+            overflow-wrap: break-word;
+            word-break: break-all;
+            min-width: 0;
         }
 
         .step-content h4 {
@@ -404,38 +407,263 @@
             </tr>
         </table>
 
-        <h2>インストール</h2>
+        <h2>インストール（ローカル版）</h2>
 
-        <h3>1. 必要なライブラリをインストール</h3>
-        <p><strong>Mac:</strong> <code>インストール.command</code> をダブルクリック</p>
-        <p><strong>Windows:</strong> <code>インストール.bat</code> をダブルクリック</p>
-        <p>または手動で:</p>
-        <div class="code-block">pip install -r requirements.txt</div>
+        <p>ローカル版をお使いの場合は、以下の手順でセットアップを行ってください。<br>
+        ZIPファイルをダウンロードして展開するだけで、Python・FFmpegも自動でインストールされます。</p>
 
-        <h3>2. FFmpegをインストール</h3>
-        <p><strong>Mac:</strong></p>
-        <div class="code-block">brew install ffmpeg</div>
+        <div class="step-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>ZIPファイルをダウンロード</h4>
+                    <p>以下のリンクから、アプリのZIPファイルをダウンロードしてください。</p>
+                    <p><strong>ダウンロードリンク</strong>: <a href="https://pjp6vm1896tv.jp.larksuite.com/drive/folder/HdEMfEuG0lDHOcdH53MjdJU9pze" target="_blank">https://pjp6vm1896tv.jp.larksuite.com/drive/folder/HdEMfEuG0lDHOcdH53MjdJU9pze</a></p>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        このZIPファイルには、アプリ本体と自動セットアップスクリプトが含まれています。Python・FFmpegは「インストール.bat」の実行時に自動でダウンロードされます。
+                    </div>
+                </div>
+            </div>
 
-        <p><strong>Windows:</strong></p>
-        <ol>
-            <li><a href="https://github.com/BtbN/FFmpeg-Builds/releases" target="_blank">https://github.com/BtbN/FFmpeg-Builds/releases</a> にアクセス</li>
-            <li><code>ffmpeg-master-latest-win64-gpl.zip</code> をダウンロード</li>
-            <li>ZIPを解凍して <code>C:\ffmpeg</code> に配置（フォルダ名を <code>ffmpeg</code> に変更）</li>
-            <li>環境変数PATHに追加:
-                <ul>
-                    <li>Windowsキー → 「環境変数」と検索 → 「システム環境変数の編集」をクリック</li>
-                    <li>「環境変数」ボタンをクリック</li>
-                    <li>「システム環境変数」の「Path」を選択 → 「編集」をクリック</li>
-                    <li>「新規」をクリック → <code>C:\ffmpeg\bin</code> と入力</li>
-                    <li>「OK」を3回クリックして閉じる</li>
-                </ul>
-            </li>
-            <li>PCを再起動</li>
-            <li>コマンドプロンプトで <code>ffmpeg -version</code> と入力して確認</li>
-        </ol>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>ZIPファイルを展開する</h4>
+                    <ol>
+                        <li>ダウンロードした <code>TikTok-Re-Editor-v3.zip</code> を<strong>右クリック</strong>します</li>
+                        <li><strong>「すべて展開」</strong>を選択します</li>
+                        <li>お好きな場所を指定して展開してください（例: デスクトップなど）</li>
+                    </ol>
+                    <div class="important">
+                        <div class="important-title">ご注意</div>
+                        ZIPファイルをダブルクリックして中身を直接開くのではなく、必ず<strong>「すべて展開」</strong>してからご利用ください。展開せずに実行するとエラーになる場合があります。
+                    </div>
+                </div>
+            </div>
 
-        <h3>3. VOICEVOXをインストール</h3>
-        <p>https://voicevox.hiroshiba.jp/ からダウンロードしてインストール</p>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>「インストール.bat」を実行する</h4>
+                    <p>展開したフォルダの中にある <code>インストール.bat</code> をダブルクリックしてください。</p>
+                    <p>以下が<strong>自動的に</strong>行われます（インターネット接続が必要です）:</p>
+                    <ol>
+                        <li><strong>Python</strong> のダウンロードとセットアップ</li>
+                        <li><strong>FFmpeg</strong> のダウンロードとセットアップ</li>
+                        <li><strong>必要なパッケージ</strong>のインストール</li>
+                    </ol>
+                    <p>「セットアップ完了！」と表示されたら完了です。</p>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        <ul>
+                            <li>初回のみ数分かかります（FFmpegのダウンロードに時間がかかる場合があります）</li>
+                            <li>2回目以降は、すでにセットアップ済みの項目はスキップされます</li>
+                            <li>途中で「WindowsによってPCが保護されました」と表示された場合は、「詳細情報」→「実行」をクリックしてください</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>VOICEVOXをインストール（別途）</h4>
+                    <p>音声合成にはVOICEVOXが必要です。以下のサイトからダウンロード・インストールしてください。</p>
+                    <p><strong>ダウンロード先</strong>: <a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a></p>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        VOICEVOXはアプリの起動前に立ち上げておく必要があります。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h4>アプリを起動する</h4>
+                    <ol>
+                        <li><strong>VOICEVOXを起動</strong>しておきます</li>
+                        <li>展開したフォルダの中にある <code>起動.bat</code> を<strong>ダブルクリック</strong>します</li>
+                        <li>自動的にブラウザが開き、アプリが表示されます</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <h2>Web版のはじめ方（ログイン・アカウント認証）</h2>
+
+        <p>Web版をご利用いただくには、Googleアカウントによるログインとアカウント登録が必要です。<br>
+        以下の手順に沿って、簡単にご利用を開始できます。</p>
+
+        <div class="step-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>アプリにアクセス</h4>
+                    <p>以下のURLにアクセスしてください。</p>
+                    <p><strong>アプリURL</strong>: <a href="https://tiktok-re-editor-nlbqc9ggejy5vmr47kzrj8.streamlit.app/" target="_blank">https://tiktok-re-editor-nlbqc9ggejy5vmr47kzrj8.streamlit.app/</a></p>
+                    <p>アクセスすると、ログイン画面が表示されます。画面中央に<strong>「TikTok Re-Editor v3」</strong>のタイトルと<strong>「Googleでログイン」</strong>ボタンが表示されます。</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Googleアカウントでログイン</h4>
+                    <ol>
+                        <li>画面中央の<strong>「🔐 Googleでログイン」</strong>ボタンをクリックします</li>
+                        <li>Googleのログイン画面が表示されますので、お使いのGoogleアカウントでログインしてください</li>
+                        <li>ログインが完了すると、自動的にアプリに戻ります</li>
+                    </ol>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        普段お使いのGoogleアカウント（Gmail等）でそのままログインできます。新しくアカウントを作成する必要はありません。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>新規登録（初回のみ）</h4>
+                    <p>初めてログインされた方は、<strong>「新規登録」</strong>フォームが表示されます。以下の項目をご入力ください。</p>
+                    <ol>
+                        <li><strong>本名</strong>を入力します（管理者のみ確認できます。他のユーザーには表示されません）</li>
+                        <li><strong>ニックネーム</strong>を入力します（アプリ内で表示される名前です）</li>
+                        <li><strong>利用規約</strong>の内容をお読みいただき、「利用規約に同意する」にチェックを入れます</li>
+                        <li><strong>「登録申請」</strong>ボタンをクリックします</li>
+                    </ol>
+                    <div class="important">
+                        <div class="important-title">ご注意</div>
+                        本名・ニックネームの両方が必須です。利用規約への同意がないと登録できません。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>承認を待つ</h4>
+                    <p>登録申請が完了すると、<strong>「⏳ 承認待ち」</strong>画面が表示されます。</p>
+                    <ul>
+                        <li>管理者がアカウントを確認し、承認するまでお待ちください</li>
+                        <li><strong>「🔄 ステータスを確認」</strong>ボタンをクリックすると、承認状況を更新できます</li>
+                        <li>承認されると、次回ページを開いた際にアプリが利用できるようになります</li>
+                    </ul>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        通常、管理者による承認は短時間で行われます。しばらくお待ちいただいた後、「ステータスを確認」ボタンを押してみてください。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h4>ログイン完了・アプリ利用開始</h4>
+                    <p>承認が完了すると、アプリのメイン画面にアクセスできます。</p>
+                    <ul>
+                        <li>画面上部に<strong>「👤 ニックネーム」</strong>のユーザーメニューが表示されます</li>
+                        <li>クリックすると、メールアドレス・ログイン回数の確認やログアウトができます</li>
+                        <li>2回目以降のログインでは、登録手続きは不要です。Googleログインだけでアプリをご利用いただけます</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h2>Web版の使い方（かんたんガイド）</h2>
+
+        <p>Web版では、ソフトウェアのインストールは不要です。ブラウザだけで動画が作成できます。<br>
+        ログイン後、以下の流れで操作を進めてください。</p>
+
+        <div class="step-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>APIキーを設定する</h4>
+                    <p>ログイン後、画面上部に<strong>「APIキー設定」</strong>セクションが表示されます。</p>
+                    <ol>
+                        <li><strong>Gladia API Key</strong>（左側）: 文字起こし・タイムスタンプ取得に必要です
+                            <br>→ <a href="https://www.gladia.io/" target="_blank">https://www.gladia.io/</a> から無料で取得できます（毎月10時間分無料）</li>
+                        <li><strong>Gemini API Key</strong>（右側）: テキスト整形・ひらがな変換・SNS生成に必要です
+                            <br>→ <a href="https://aistudio.google.com/apikey" target="_blank">https://aistudio.google.com/apikey</a> から無料で取得できます</li>
+                    </ol>
+                    <div class="important">
+                        <div class="important-title">ご注意</div>
+                        APIキーはブラウザを閉じると消えます。メモ帳などに保存しておくと、次回の入力がスムーズです。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>入力ソースを選択する</h4>
+                    <p><strong>「1. 入力ソース選択」</strong>セクションで、4つのタブから入力方法を選びます。</p>
+                    <table>
+                        <tr>
+                            <th>タブ名</th>
+                            <th>使い方</th>
+                            <th>必要なAPI</th>
+                        </tr>
+                        <tr>
+                            <td><strong>動画から生成</strong></td>
+                            <td>動画ファイルをアップロードして自動文字起こし</td>
+                            <td>Gladia + Gemini</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ファイルから生成</strong></td>
+                            <td>.txtファイルをアップロードして読み込み</td>
+                            <td>なし（ひらがな変換にGemini）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>テキスト入力</strong></td>
+                            <td>テキストを直接貼り付けて入力</td>
+                            <td>なし（ひらがな変換にGemini）</td>
+                        </tr>
+                        <tr>
+                            <td><strong>🎵 音声アップロード</strong></td>
+                            <td>音声ファイルをアップロードして自動で文字起こし＆動画生成</td>
+                            <td>Gladia + Gemini</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>テキストを確認・編集する</h4>
+                    <p>処理が完了すると、画面に<strong>2カラムのテキスト編集エリア</strong>が表示されます。</p>
+                    <ul>
+                        <li><strong>左側「整形済みテキスト」</strong>: 動画に表示されるテキストです。内容を自由に編集できます</li>
+                        <li><strong>右側「ひらがな」</strong>: 音声生成に使用されるひらがなテキストです。「ひらがなに変換」ボタンで生成できます</li>
+                        <li>テキストの下にある<strong>「DOWNLOAD TEXT」</strong>で、整形済みテキストをダウンロードできます</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>動画を生成してダウンロードする</h4>
+                    <ol>
+                        <li><strong>「GENERATE VIDEO」</strong>ボタンをクリックします</li>
+                        <li>進捗バーが100%になるまでお待ちください</li>
+                        <li>iPhone風フレームで動画のプレビューが表示されます</li>
+                        <li><strong>「DOWNLOAD VIDEO (.mov)」</strong>をクリックして透過動画をダウンロードします</li>
+                    </ol>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        <ul>
+                            <li>プレビューはチェッカー背景で表示されますが、実際にダウンロードされる動画は背景が透過です</li>
+                            <li>ダウンロードした.movファイルはPremiere Proなどで背景動画と合成できます</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <h2>使い方（詳細手順）</h2>
 
@@ -593,42 +821,140 @@
             <li>透過部分から背景が見える</li>
         </ol>
 
+        <h2>テキストをダウンロードしてVOICEVOXで使う方法</h2>
+
+        <p>本アプリで整形したテキストは、ダウンロードしてVOICEVOXデスクトップ版で音声を作成するのにも活用できます。<br>
+        以下の手順で、テキストのダウンロードからVOICEVOXでの音声生成までスムーズに進められます。</p>
+
+        <div class="step-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>テキストをダウンロードする</h4>
+                    <p>アプリでテキストの整形が完了したら、テキストファイルをダウンロードします。</p>
+                    <ol>
+                        <li>画面左側の<strong>「整形済みテキスト（動画表示用）」</strong>エリアで、テキストの内容を確認します</li>
+                        <li>テキストエリアの下にある<strong>「DOWNLOAD TEXT」</strong>ボタンをクリックします</li>
+                        <li><code>ファイル名.txt</code> がダウンロードフォルダに保存されます</li>
+                    </ol>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        ダウンロードされるテキストは、1行あたり約14文字で自動的に改行が調整されています。VOICEVOXでの読み上げに適した形式になっています。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>VOICEVOXを起動する</h4>
+                    <p>まだVOICEVOXをインストールされていない場合は、下記のサイトからダウンロード・インストールしてください。</p>
+                    <ul>
+                        <li><strong>ダウンロード先</strong>: <a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a></li>
+                        <li>インストール後、VOICEVOXアプリケーションを起動します</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>テキストをVOICEVOXに貼り付ける</h4>
+                    <ol>
+                        <li>ダウンロードした <code>.txt</code> ファイルをメモ帳やテキストエディタで開きます</li>
+                        <li>テキストの内容を<strong>すべて選択（Ctrl+A / Cmd+A）</strong>してコピーします</li>
+                        <li>VOICEVOXの画面で、テキスト入力欄に<strong>貼り付け（Ctrl+V / Cmd+V）</strong>します</li>
+                        <li>行ごとにVOICEVOXのセルが自動で分割されます</li>
+                    </ol>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        <ul>
+                            <li>VOICEVOXでは、改行ごとに別々のセルとして認識されます</li>
+                            <li>各セルのキャラクター・スタイルを個別に変更できます</li>
+                            <li>読み方が間違っている場合は、VOICEVOXの画面上で修正してください</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>VOICEVOXで音声を生成・書き出す</h4>
+                    <ol>
+                        <li><strong>キャラクター</strong>を選択します（例: ずんだもん、青山龍星など）</li>
+                        <li>必要に応じて<strong>話速・音高・抑揚</strong>を調整します</li>
+                        <li>再生ボタンで音声を確認します</li>
+                        <li>メニューから<strong>「ファイル」→「音声書き出し」</strong>を選択します</li>
+                        <li>保存先を選んで、WAV形式で音声ファイルを書き出します</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h4>生成した音声をアプリにアップロード（任意）</h4>
+                    <p>VOICEVOXで作成した音声ファイルを、本アプリの<strong>「音声アップロード」</strong>機能で使用できます。</p>
+                    <ol>
+                        <li>アプリの<strong>「音声アップロード」タブ</strong>を選択します</li>
+                        <li>VOICEVOXで書き出した<strong>WAVファイル</strong>をアップロードします</li>
+                        <li>自動で文字起こし＆タイムスタンプが取得されます</li>
+                        <li><strong>「GENERATE VIDEO」</strong>をクリックすると、音声と字幕が同期した透過動画が生成されます</li>
+                    </ol>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        この方法を使うと、VOICEVOXのデスクトップ版で細かく調整した音声をそのまま動画に反映できます。より高品質な動画を作成したい場合におすすめです。
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <h2>トラブルシューティング</h2>
 
         <div class="troubleshoot">
             <div class="troubleshoot-item">
-                <h4>VOICEVOXに接続できない</h4>
-                <ul>
-                    <li>VOICEVOXアプリが起動しているか確認</li>
-                    <li>デフォルトURL: <code>http://localhost:50021</code></li>
-                </ul>
-            </div>
-            <div class="troubleshoot-item">
                 <h4>音声が生成されない</h4>
                 <ul>
-                    <li>VOICEVOXが起動中か確認</li>
-                    <li>テキストが空でないか確認</li>
+                    <li>VOICEVOXが起動中か確認してください</li>
+                    <li>テキストが空でないか確認してください</li>
                 </ul>
             </div>
             <div class="troubleshoot-item">
                 <h4>動画が生成されない</h4>
-                <ul>
-                    <li>FFmpegがインストールされているか確認</li>
-                    <li><code>ffmpeg -version</code> で確認</li>
-                </ul>
+                <p>FFmpegが正しくインストールされていない可能性があります。以下の手順で確認してください。</p>
+                <ol>
+                    <li>まず<strong>「インストール.bat」を再度実行</strong>してください。FFmpegが未インストールの場合は自動でダウンロードされます</li>
+                    <li>それでも解決しない場合は、以下の手順でFFmpegの状態を確認します:
+                        <ul>
+                            <li>展開したフォルダの中に <code>ffmpeg</code> フォルダがあるか確認してください</li>
+                            <li><code>ffmpeg</code> フォルダの中に <code>ffmpeg.exe</code> と <code>ffprobe.exe</code> の2つのファイルがあるか確認してください</li>
+                            <li>ファイルが無い場合は、インターネット接続を確認してから「インストール.bat」を再実行してください</li>
+                        </ul>
+                    </li>
+                    <li>上記を確認しても動画が生成されない場合は、<strong>アプリを一度閉じて「起動.bat」で再起動</strong>してみてください</li>
+                </ol>
             </div>
             <div class="troubleshoot-item">
                 <h4>ひらがな変換ができない</h4>
                 <ul>
-                    <li>Gemini APIキーが正しいか確認</li>
-                    <li>API設定で保存されているか確認</li>
+                    <li>Gemini APIキーが正しく入力されているか確認してください</li>
+                    <li>APIキーはブラウザを閉じると消えるため、再度入力が必要です</li>
                 </ul>
             </div>
             <div class="troubleshoot-item">
                 <h4>テキスト修正後に動画が変わらない</h4>
                 <ul>
                     <li>「GENERATE VIDEO」を再度クリックしてください</li>
-                    <li>行数を変更した場合は音声も再生成が必要です</li>
+                    <li>行数を変更した場合は、音声も再生成が必要です</li>
+                </ul>
+            </div>
+            <div class="troubleshoot-item">
+                <h4>「WindowsによってPCが保護されました」と表示される</h4>
+                <ul>
+                    <li>「詳細情報」をクリックしてください</li>
+                    <li>「実行」ボタンが表示されますので、クリックして進めてください</li>
+                    <li>これはWindows標準のセキュリティ警告で、問題ありません</li>
                 </ul>
             </div>
         </div>
