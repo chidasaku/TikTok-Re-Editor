@@ -382,12 +382,12 @@
                 <td>動画生成</td>
                 <td>https://ffmpeg.org/</td>
             </tr>
-            <tr>
-                <td><strong>VOICEVOX</strong></td>
-                <td>音声合成</td>
-                <td>https://voicevox.hiroshiba.jp/</td>
-            </tr>
         </table>
+
+        <div class="note">
+            <div class="note-title">ポイント</div>
+            Python・FFmpegはインストールスクリプトの実行時に自動でインストールされるため、手動でのインストールは不要です。
+        </div>
 
         <h3>APIキー</h3>
         <table>
@@ -395,19 +395,19 @@
                 <th>API</th>
                 <th>用途</th>
                 <th>取得先</th>
-                <th>必須</th>
+                <th>無料枠</th>
             </tr>
             <tr>
                 <td><strong>Gladia API</strong></td>
-                <td>動画の文字起こし</td>
-                <td>https://www.gladia.io/</td>
-                <td>動画入力時のみ</td>
+                <td>文字起こし・タイムスタンプ</td>
+                <td><a href="https://www.gladia.io/" target="_blank">https://www.gladia.io/</a></td>
+                <td>10時間/月</td>
             </tr>
             <tr>
                 <td><strong>Gemini API</strong></td>
-                <td>ひらがな変換・テキスト整形・SNS生成</td>
-                <td>https://aistudio.google.com/apikey</td>
-                <td>推奨</td>
+                <td>テキスト整形・SNS生成</td>
+                <td><a href="https://aistudio.google.com/apikey" target="_blank">https://aistudio.google.com/apikey</a></td>
+                <td>無料</td>
             </tr>
         </table>
 
@@ -497,22 +497,8 @@
             <div class="step">
                 <div class="step-number">4</div>
                 <div class="step-content">
-                    <h4>VOICEVOXをインストール（別途）</h4>
-                    <p>音声合成にはVOICEVOXが必要です。以下のサイトからダウンロード・インストールしてください。</p>
-                    <p><strong>ダウンロード先</strong>: <a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a></p>
-                    <div class="note">
-                        <div class="note-title">ポイント</div>
-                        VOICEVOXはアプリの起動前に立ち上げておく必要があります。
-                    </div>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-number">5</div>
-                <div class="step-content">
                     <h4>アプリを起動する</h4>
                     <ol>
-                        <li><strong>VOICEVOXを起動</strong>しておきます</li>
                         <li>展開したフォルダの中にある <code>起動.bat</code>（Windows）または <code>起動.command</code>（Mac）を<strong>ダブルクリック</strong>します</li>
                         <li>自動的にブラウザが開き、アプリが表示されます</li>
                     </ol>
@@ -615,7 +601,7 @@
                     <ol>
                         <li><strong>Gladia API Key</strong>（左側）: 文字起こし・タイムスタンプ取得に必要です
                             <br>→ <a href="https://www.gladia.io/" target="_blank">https://www.gladia.io/</a> から無料で取得できます（毎月10時間分無料）</li>
-                        <li><strong>Gemini API Key</strong>（右側）: テキスト整形・ひらがな変換・SNS生成に必要です
+                        <li><strong>Gemini API Key</strong>（右側）: テキスト整形・SNS生成に必要です
                             <br>→ <a href="https://aistudio.google.com/apikey" target="_blank">https://aistudio.google.com/apikey</a> から無料で取得できます</li>
                     </ol>
                     <div class="important">
@@ -644,15 +630,15 @@
                         <tr>
                             <td><strong>ファイルから生成</strong></td>
                             <td>.txtファイルをアップロードして読み込み</td>
-                            <td>なし（ひらがな変換にGemini）</td>
+                            <td>なし（テキスト整形にGemini）</td>
                         </tr>
                         <tr>
                             <td><strong>テキスト入力</strong></td>
                             <td>テキストを直接貼り付けて入力</td>
-                            <td>なし（ひらがな変換にGemini）</td>
+                            <td>なし（テキスト整形にGemini）</td>
                         </tr>
                         <tr>
-                            <td><strong>🎵 音声アップロード</strong></td>
+                            <td><strong>音声アップロード</strong></td>
                             <td>音声ファイルをアップロードして自動で文字起こし＆動画生成</td>
                             <td>Gladia + Gemini</td>
                         </tr>
@@ -702,9 +688,8 @@
                 <div class="step-content">
                     <h4>準備</h4>
                     <ol>
-                        <li><strong>VOICEVOXを起動</strong> - アプリを開いておくだけでOK</li>
                         <li><strong>アプリを起動</strong> - Mac: <code>起動.command</code> / Windows: <code>起動.bat</code> をダブルクリック</li>
-                        <li><strong>APIキーを設定</strong>（初回のみ）- 画面上部の「API設定」からGemini APIキーを入力</li>
+                        <li><strong>APIキーを設定</strong>（初回のみ）- 画面上部の「API設定」からGladia・Gemini APIキーを入力</li>
                     </ol>
                 </div>
             </div>
@@ -735,39 +720,6 @@
             <div class="step">
                 <div class="step-number">3</div>
                 <div class="step-content">
-                    <h4>ひらがなに変換</h4>
-                    <ol>
-                        <li>左側のテキストを確認・編集（動画に表示されるテキスト）</li>
-                        <li><strong>「ひらがなに変換」をクリック</strong></li>
-                        <li>右側にひらがなテキストが表示される</li>
-                        <li>必要に応じてひらがなを修正</li>
-                    </ol>
-                    <div class="important">
-                        <div class="important-title">重要</div>
-                        ひらがなは音声生成に使用されます。読み方が間違っていたら修正してください。
-                    </div>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <h4>音声を生成</h4>
-                    <ol>
-                        <li><strong>キャラクターを選択</strong>（例: 青山龍星）</li>
-                        <li><strong>スタイルを選択</strong>（例: ノーマル）</li>
-                        <li>「PREVIEW」で試聴（任意）</li>
-                        <li><strong>話速を調整</strong>（1.0x = 標準）</li>
-                        <li><strong>間の長さを調整</strong>（1.0 = 標準）</li>
-                        <li><strong>「GENERATE AUDIO」をクリック</strong></li>
-                        <li>音声が生成されたら再生して確認</li>
-                    </ol>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-number">5</div>
-                <div class="step-content">
                     <h4>動画を生成</h4>
                     <ol>
                         <li><strong>「GENERATE VIDEO」をクリック</strong></li>
@@ -783,7 +735,7 @@
             </div>
 
             <div class="step">
-                <div class="step-number">6</div>
+                <div class="step-number">4</div>
                 <div class="step-content">
                     <h4>テキストを修正して再生成（任意）</h4>
                     <p>動画生成後にテキストを修正したい場合:</p>
@@ -800,7 +752,7 @@
             </div>
 
             <div class="step">
-                <div class="step-number">7</div>
+                <div class="step-number">5</div>
                 <div class="step-content">
                     <h4>SNSコンテンツを生成（任意）</h4>
                     <ol>
@@ -850,105 +802,10 @@
             <li>透過部分から背景が見える</li>
         </ol>
 
-        <h2>テキストをダウンロードしてVOICEVOXで使う方法</h2>
-
-        <p>本アプリで整形したテキストは、ダウンロードしてVOICEVOXデスクトップ版で音声を作成するのにも活用できます。<br>
-        以下の手順で、テキストのダウンロードからVOICEVOXでの音声生成までスムーズに進められます。</p>
-
-        <div class="step-container">
-            <div class="step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    <h4>テキストをダウンロードする</h4>
-                    <p>アプリでテキストの整形が完了したら、テキストファイルをダウンロードします。</p>
-                    <ol>
-                        <li>画面左側の<strong>「整形済みテキスト（動画表示用）」</strong>エリアで、テキストの内容を確認します</li>
-                        <li>テキストエリアの下にある<strong>「DOWNLOAD TEXT」</strong>ボタンをクリックします</li>
-                        <li><code>ファイル名.txt</code> がダウンロードフォルダに保存されます</li>
-                    </ol>
-                    <div class="note">
-                        <div class="note-title">ポイント</div>
-                        ダウンロードされるテキストは、1行あたり約14文字で自動的に改行が調整されています。VOICEVOXでの読み上げに適した形式になっています。
-                    </div>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    <h4>VOICEVOXを起動する</h4>
-                    <p>まだVOICEVOXをインストールされていない場合は、下記のサイトからダウンロード・インストールしてください。</p>
-                    <ul>
-                        <li><strong>ダウンロード先</strong>: <a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a></li>
-                        <li>インストール後、VOICEVOXアプリケーションを起動します</li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    <h4>テキストをVOICEVOXに貼り付ける</h4>
-                    <ol>
-                        <li>ダウンロードした <code>.txt</code> ファイルをメモ帳やテキストエディタで開きます</li>
-                        <li>テキストの内容を<strong>すべて選択（Ctrl+A / Cmd+A）</strong>してコピーします</li>
-                        <li>VOICEVOXの画面で、テキスト入力欄に<strong>貼り付け（Ctrl+V / Cmd+V）</strong>します</li>
-                        <li>行ごとにVOICEVOXのセルが自動で分割されます</li>
-                    </ol>
-                    <div class="note">
-                        <div class="note-title">ポイント</div>
-                        <ul>
-                            <li>VOICEVOXでは、改行ごとに別々のセルとして認識されます</li>
-                            <li>各セルのキャラクター・スタイルを個別に変更できます</li>
-                            <li>読み方が間違っている場合は、VOICEVOXの画面上で修正してください</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <h4>VOICEVOXで音声を生成・書き出す</h4>
-                    <ol>
-                        <li><strong>キャラクター</strong>を選択します（例: ずんだもん、青山龍星など）</li>
-                        <li>必要に応じて<strong>話速・音高・抑揚</strong>を調整します</li>
-                        <li>再生ボタンで音声を確認します</li>
-                        <li>メニューから<strong>「ファイル」→「音声書き出し」</strong>を選択します</li>
-                        <li>保存先を選んで、WAV形式で音声ファイルを書き出します</li>
-                    </ol>
-                </div>
-            </div>
-
-            <div class="step">
-                <div class="step-number">5</div>
-                <div class="step-content">
-                    <h4>生成した音声をアプリにアップロード（任意）</h4>
-                    <p>VOICEVOXで作成した音声ファイルを、本アプリの<strong>「音声アップロード」</strong>機能で使用できます。</p>
-                    <ol>
-                        <li>アプリの<strong>「音声アップロード」タブ</strong>を選択します</li>
-                        <li>VOICEVOXで書き出した<strong>WAVファイル</strong>をアップロードします</li>
-                        <li>自動で文字起こし＆タイムスタンプが取得されます</li>
-                        <li><strong>「GENERATE VIDEO」</strong>をクリックすると、音声と字幕が同期した透過動画が生成されます</li>
-                    </ol>
-                    <div class="note">
-                        <div class="note-title">ポイント</div>
-                        この方法を使うと、VOICEVOXのデスクトップ版で細かく調整した音声をそのまま動画に反映できます。より高品質な動画を作成したい場合におすすめです。
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <h2>トラブルシューティング</h2>
 
         <div class="troubleshoot">
-            <div class="troubleshoot-item">
-                <h4>音声が生成されない</h4>
-                <ul>
-                    <li>VOICEVOXが起動中か確認してください</li>
-                    <li>テキストが空でないか確認してください</li>
-                </ul>
-            </div>
             <div class="troubleshoot-item">
                 <h4>動画が生成されない</h4>
                 <p>FFmpegが正しくインストールされていない可能性があります。以下の手順で確認してください。</p>
@@ -972,17 +829,17 @@
                 </ol>
             </div>
             <div class="troubleshoot-item">
-                <h4>ひらがな変換ができない</h4>
-                <ul>
-                    <li>Gemini APIキーが正しく入力されているか確認してください</li>
-                    <li>APIキーはブラウザを閉じると消えるため、再度入力が必要です</li>
-                </ul>
-            </div>
-            <div class="troubleshoot-item">
                 <h4>テキスト修正後に動画が変わらない</h4>
                 <ul>
                     <li>「GENERATE VIDEO」を再度クリックしてください</li>
                     <li>行数を変更した場合は、音声も再生成が必要です</li>
+                </ul>
+            </div>
+            <div class="troubleshoot-item">
+                <h4>文字起こし・テキスト整形ができない</h4>
+                <ul>
+                    <li>Gladia / Gemini APIキーが正しく入力されているか確認してください</li>
+                    <li>APIキーはブラウザを閉じると消えるため、再度入力が必要です</li>
                 </ul>
             </div>
             <div class="troubleshoot-item">
