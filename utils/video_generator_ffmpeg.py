@@ -76,46 +76,30 @@ class VideoGeneratorFFmpeg:
 
     def _create_text_image(self, text: str, width: int, height: int, font_size: int = 100, transparent: bool = False, checker: bool = False) -> Image.Image:
         """縦書きテキスト画像を生成"""
-        # OS別にフォントを読み込み
-        import glob as _glob
+        # バンドル版フォントのパス（最優先）
+        bundled_font = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts', 'NotoSansJP-Bold.otf')
         font = None
+        # 1. バンドル版フォント（全環境で確実に動作）
+        font_paths = [bundled_font]
+        # 2. OS別のシステムフォント
         if platform.system() == "Darwin":
-            # macOS → ヒラギノ角ゴシック
-            font_paths = [
+            font_paths.extend([
                 "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc",
                 "/System/Library/Fonts/ヒラギノ角ゴ ProN W6.otf",
                 "/System/Library/Fonts/Hiragino Sans GB.ttc",
-            ]
+            ])
         elif platform.system() == "Linux":
-            # Linux (Streamlit Cloud等) → Noto Sans CJK
-            # 固定パス候補
-            font_paths = [
+            font_paths.extend([
                 "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
                 "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-                "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
-                "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
-                "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
-                "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
                 "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Bold.otf",
-                "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Regular.otf",
-            ]
-            # glob検索で見つかるCJKフォントも追加
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Bold*.ttc", recursive=True))
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Regular*.ttc", recursive=True))
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Bold*.otf", recursive=True))
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Regular*.otf", recursive=True))
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/*CJK*.ttc", recursive=True))
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/*CJK*.otf", recursive=True))
-            # DejaVu等の汎用フォントもフォールバック候補に
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/DejaVuSans-Bold.ttf", recursive=True))
-            font_paths.extend(_glob.glob("/usr/share/fonts/**/DejaVuSans.ttf", recursive=True))
+            ])
         else:
-            # Windows → 游ゴシック
-            font_paths = [
-                "C:/Windows/Fonts/YuGothB.ttc",  # 游ゴシック Bold
-                "C:/Windows/Fonts/YuGothM.ttc",  # 游ゴシック Medium
-                "C:/Windows/Fonts/meiryo.ttc",   # メイリオ（フォールバック）
-            ]
+            font_paths.extend([
+                "C:/Windows/Fonts/YuGothB.ttc",
+                "C:/Windows/Fonts/YuGothM.ttc",
+                "C:/Windows/Fonts/meiryo.ttc",
+            ])
         for font_path in font_paths:
             try:
                 font = ImageFont.truetype(font_path, font_size)
