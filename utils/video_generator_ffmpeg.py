@@ -16,7 +16,7 @@ def _find_ffmpeg():
     try:
         import imageio_ffmpeg
         return imageio_ffmpeg.get_ffmpeg_exe()
-    except ImportError:
+    except Exception:
         return 'ffmpeg'
 
 
@@ -25,17 +25,24 @@ def _find_ffprobe():
     path = shutil.which('ffprobe')
     if path:
         return path
-    # imageio-ffmpegのffmpegと同じディレクトリにffprobeがあるか確認
-    ffmpeg = _find_ffmpeg()
-    ffprobe_candidate = os.path.join(os.path.dirname(ffmpeg), 'ffprobe')
-    if os.path.isfile(ffprobe_candidate):
-        return ffprobe_candidate
-    return None  # ffprobe無し → ffmpegフォールバックを使用
+    try:
+        ffmpeg = FFMPEG_BIN
+        ffprobe_candidate = os.path.join(os.path.dirname(ffmpeg), 'ffprobe')
+        if os.path.isfile(ffprobe_candidate):
+            return ffprobe_candidate
+    except Exception:
+        pass
+    return None
 
 
-FFMPEG_BIN = _find_ffmpeg()
-FFPROBE_BIN = _find_ffprobe()
-print(f"[INFO] ffmpeg: {FFMPEG_BIN}, ffprobe: {FFPROBE_BIN}")
+try:
+    FFMPEG_BIN = _find_ffmpeg()
+    FFPROBE_BIN = _find_ffprobe()
+    print(f"[INFO] ffmpeg: {FFMPEG_BIN}, ffprobe: {FFPROBE_BIN}")
+except Exception as e:
+    FFMPEG_BIN = 'ffmpeg'
+    FFPROBE_BIN = None
+    print(f"[WARNING] ffmpeg検出でエラー: {e}")
 
 
 class VideoGeneratorFFmpeg:
