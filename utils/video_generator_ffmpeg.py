@@ -656,40 +656,42 @@ class VideoGeneratorFFmpeg:
         segment_videos_preview = []
 
         try:
-            # 最初のセグメント開始前に無音区間がある場合、空白フレームを挿入して同期を保つ
+            # 最初のセグメント開始前に無音区間がある場合、最初のテロップを先行表示して同期を保つ
             first_start = segments[0]["start"]
             if first_start > 0.05:
-                print(f"先頭の無音区間 ({first_start:.2f}s) に空白フレームを挿入します")
+                first_text = segments[0]["text"].strip()
+                first_display = first_text.replace('、', '').replace('。', '').replace('，', '').replace('．', '')
+                print(f"先頭の無音区間 ({first_start:.2f}s) に最初のテロップを先行表示します")
                 if transparent:
-                    blank_transparent = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-                    blank_transparent_path = os.path.join(temp_dir, "frame_transparent_blank.png")
-                    blank_transparent.save(blank_transparent_path)
-                    temp_files.append(blank_transparent_path)
+                    lead_transparent = self._create_text_image(first_display, width, height, transparent=True)
+                    lead_transparent_path = os.path.join(temp_dir, "frame_transparent_lead.png")
+                    lead_transparent.save(lead_transparent_path)
+                    temp_files.append(lead_transparent_path)
 
-                    blank_preview = self._create_checker_background(width, height)
-                    blank_preview_path = os.path.join(temp_dir, "frame_preview_blank.png")
-                    blank_preview.save(blank_preview_path)
-                    temp_files.append(blank_preview_path)
+                    lead_preview = self._create_text_image(first_display, width, height, checker=True)
+                    lead_preview_path = os.path.join(temp_dir, "frame_preview_lead.png")
+                    lead_preview.save(lead_preview_path)
+                    temp_files.append(lead_preview_path)
 
-                    video_blank_transparent = os.path.join(temp_dir, "segment_transparent_blank.mov")
-                    self._create_video_only_segment(blank_transparent_path, video_blank_transparent, first_start, fps, transparent=True)
-                    segment_videos_transparent.append(video_blank_transparent)
-                    temp_files.append(video_blank_transparent)
+                    video_lead_transparent = os.path.join(temp_dir, "segment_transparent_lead.mov")
+                    self._create_video_only_segment(lead_transparent_path, video_lead_transparent, first_start, fps, transparent=True)
+                    segment_videos_transparent.append(video_lead_transparent)
+                    temp_files.append(video_lead_transparent)
 
-                    video_blank_preview = os.path.join(temp_dir, "segment_preview_blank.mp4")
-                    self._create_video_only_segment(blank_preview_path, video_blank_preview, first_start, fps, transparent=False)
-                    segment_videos_preview.append(video_blank_preview)
-                    temp_files.append(video_blank_preview)
+                    video_lead_preview = os.path.join(temp_dir, "segment_preview_lead.mp4")
+                    self._create_video_only_segment(lead_preview_path, video_lead_preview, first_start, fps, transparent=False)
+                    segment_videos_preview.append(video_lead_preview)
+                    temp_files.append(video_lead_preview)
                 else:
-                    blank_img = Image.new('RGB', (width, height), self.background_color)
-                    blank_img_path = os.path.join(temp_dir, "frame_blank.png")
-                    blank_img.save(blank_img_path)
-                    temp_files.append(blank_img_path)
+                    lead_img = self._create_text_image(first_display, width, height, transparent=False)
+                    lead_img_path = os.path.join(temp_dir, "frame_lead.png")
+                    lead_img.save(lead_img_path)
+                    temp_files.append(lead_img_path)
 
-                    video_blank = os.path.join(temp_dir, "segment_blank.mp4")
-                    self._create_video_only_segment(blank_img_path, video_blank, first_start, fps, transparent=False)
-                    segment_videos_transparent.append(video_blank)
-                    temp_files.append(video_blank)
+                    video_lead = os.path.join(temp_dir, "segment_lead.mp4")
+                    self._create_video_only_segment(lead_img_path, video_lead, first_start, fps, transparent=False)
+                    segment_videos_transparent.append(video_lead)
+                    temp_files.append(video_lead)
 
             # 各セグメントの映像のみを作成（音声なし）
             for i, seg in enumerate(segments):
