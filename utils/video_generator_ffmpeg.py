@@ -1,20 +1,41 @@
 import os
 import platform
+import re
 import shutil
 import subprocess
 import tempfile
 from PIL import Image, ImageDraw, ImageFont
 from utils.voicevox import VoiceVoxAPI
 
-# ffmpegがPATHにない場合、imageio-ffmpegのバンドル版を使用
-if not shutil.which('ffmpeg'):
+
+def _find_ffmpeg():
+    """ffmpegバイナリの絶対パスを取得"""
+    path = shutil.which('ffmpeg')
+    if path:
+        return path
     try:
         import imageio_ffmpeg
-        _ffmpeg_dir = os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
-        os.environ['PATH'] = _ffmpeg_dir + os.pathsep + os.environ.get('PATH', '')
-        print(f"[INFO] imageio-ffmpegのffmpegを使用: {_ffmpeg_dir}")
+        return imageio_ffmpeg.get_ffmpeg_exe()
     except ImportError:
-        print("[WARNING] ffmpegが見つかりません。imageio-ffmpegもインストールされていません。")
+        return 'ffmpeg'
+
+
+def _find_ffprobe():
+    """ffprobeバイナリの絶対パスを取得"""
+    path = shutil.which('ffprobe')
+    if path:
+        return path
+    # imageio-ffmpegのffmpegと同じディレクトリにffprobeがあるか確認
+    ffmpeg = _find_ffmpeg()
+    ffprobe_candidate = os.path.join(os.path.dirname(ffmpeg), 'ffprobe')
+    if os.path.isfile(ffprobe_candidate):
+        return ffprobe_candidate
+    return None  # ffprobe無し → ffmpegフォールバックを使用
+
+
+FFMPEG_BIN = _find_ffmpeg()
+FFPROBE_BIN = _find_ffprobe()
+print(f"[INFO] ffmpeg: {FFMPEG_BIN}, ffprobe: {FFPROBE_BIN}")
 
 
 class VideoGeneratorFFmpeg:
@@ -344,17 +365,16 @@ class VideoGeneratorFFmpeg:
 
     def _get_audio_duration(self, audio_path: str) -> float:
         """音声ファイルの長さを取得（ffprobe優先、なければffmpegで取得）"""
-        if shutil.which('ffprobe'):
+        if FFPROBE_BIN:
             result = subprocess.run(
-                ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                [FFPROBE_BIN, '-v', 'error', '-show_entries', 'format=duration',
                  '-of', 'default=noprint_wrappers=1:nokey=1', audio_path],
                 capture_output=True, text=True
             )
             return float(result.stdout.strip())
         else:
-            import re
             result = subprocess.run(
-                ['ffmpeg', '-i', audio_path, '-f', 'null', '-'],
+                [FFMPEG_BIN, '-i', audio_path, '-f', 'null', '-'],
                 capture_output=True, text=True
             )
             match = re.search(r'Duration:\s*(\d+):(\d+):(\d+)\.(\d+)', result.stderr)
@@ -368,7 +388,7 @@ class VideoGeneratorFFmpeg:
         if transparent:
             # ProRes 4444（アルファチャンネル対応）
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
                 '-t', str(duration),
@@ -386,7 +406,7 @@ class VideoGeneratorFFmpeg:
         else:
             # 通常のMP4
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
                 '-t', str(duration),
@@ -414,7 +434,7 @@ class VideoGeneratorFFmpeg:
         if transparent:
             # ProRes 4444を維持（音声同期オプション付き）
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-f', 'concat',
                 '-safe', '0',
                 '-i', list_path,
@@ -429,7 +449,7 @@ class VideoGeneratorFFmpeg:
         else:
             # MP4（再エンコードで同期を確保）
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-f', 'concat',
                 '-safe', '0',
                 '-i', list_path,
@@ -767,7 +787,7 @@ class VideoGeneratorFFmpeg:
     def _extract_audio_segment(self, input_path: str, output_path: str, start_time: float, duration: float):
         """音声ファイルから指定区間を切り出し"""
         subprocess.run([
-            'ffmpeg', '-y',
+            FFMPEG_BIN, '-y',
             '-i', input_path,
             '-ss', str(start_time),
             '-t', str(duration),
@@ -782,7 +802,7 @@ class VideoGeneratorFFmpeg:
         if transparent:
             # ProRes 4444（アルファチャンネル対応）
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
                 '-i', img_path,
@@ -796,7 +816,7 @@ class VideoGeneratorFFmpeg:
         else:
             # 通常のMP4（音声なし）
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-loop', '1',
                 '-framerate', str(fps),
                 '-i', img_path,
@@ -817,7 +837,7 @@ class VideoGeneratorFFmpeg:
 
         if transparent:
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-f', 'concat',
                 '-safe', '0',
                 '-i', list_path,
@@ -829,7 +849,7 @@ class VideoGeneratorFFmpeg:
             ], capture_output=True, check=True)
         else:
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-f', 'concat',
                 '-safe', '0',
                 '-i', list_path,
@@ -846,7 +866,7 @@ class VideoGeneratorFFmpeg:
         """映像と音声を結合（元の音声をそのまま使用）"""
         if transparent:
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-i', video_path,
                 '-i', audio_path,
                 '-c:v', 'copy',
@@ -858,7 +878,7 @@ class VideoGeneratorFFmpeg:
             ], capture_output=True, check=True)
         else:
             subprocess.run([
-                'ffmpeg', '-y',
+                FFMPEG_BIN, '-y',
                 '-i', video_path,
                 '-i', audio_path,
                 '-c:v', 'copy',
