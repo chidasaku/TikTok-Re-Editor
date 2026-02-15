@@ -332,13 +332,26 @@ class VideoGeneratorFFmpeg:
                 os.rmdir(temp_dir)
 
     def _get_audio_duration(self, audio_path: str) -> float:
-        """音声ファイルの長さを取得"""
-        result = subprocess.run(
-            ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
-             '-of', 'default=noprint_wrappers=1:nokey=1', audio_path],
-            capture_output=True, text=True
-        )
-        return float(result.stdout.strip())
+        """音声ファイルの長さを取得（ffprobe優先、なければffmpegで取得）"""
+        import shutil
+        if shutil.which('ffprobe'):
+            result = subprocess.run(
+                ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                 '-of', 'default=noprint_wrappers=1:nokey=1', audio_path],
+                capture_output=True, text=True
+            )
+            return float(result.stdout.strip())
+        else:
+            import re
+            result = subprocess.run(
+                ['ffmpeg', '-i', audio_path, '-f', 'null', '-'],
+                capture_output=True, text=True
+            )
+            match = re.search(r'Duration:\s*(\d+):(\d+):(\d+)\.(\d+)', result.stderr)
+            if match:
+                h, m, s, cs = match.groups()
+                return int(h) * 3600 + int(m) * 60 + int(s) + int(cs) / 100
+            raise RuntimeError(f"音声ファイルの長さを取得できませんでした: {audio_path}")
 
     def _create_video_segment(self, img_path: str, audio_path: str, output_path: str, duration: float, fps: int, transparent: bool = False):
         """1つのセグメント動画を作成（音声と映像を同期）"""
@@ -599,6 +612,41 @@ class VideoGeneratorFFmpeg:
         segment_videos_preview = []
 
         try:
+            # 最初のセグメント開始前に無音区間がある場合、空白フレームを挿入して同期を保つ
+            first_start = segments[0]["start"]
+            if first_start > 0.05:
+                print(f"先頭の無音区間 ({first_start:.2f}s) に空白フレームを挿入します")
+                if transparent:
+                    blank_transparent = self._create_text_image("", width, height, transparent=True)
+                    blank_transparent_path = os.path.join(temp_dir, "frame_transparent_blank.png")
+                    blank_transparent.save(blank_transparent_path)
+                    temp_files.append(blank_transparent_path)
+
+                    blank_preview = self._create_text_image("", width, height, checker=True)
+                    blank_preview_path = os.path.join(temp_dir, "frame_preview_blank.png")
+                    blank_preview.save(blank_preview_path)
+                    temp_files.append(blank_preview_path)
+
+                    video_blank_transparent = os.path.join(temp_dir, "segment_transparent_blank.mov")
+                    self._create_video_only_segment(blank_transparent_path, video_blank_transparent, first_start, fps, transparent=True)
+                    segment_videos_transparent.append(video_blank_transparent)
+                    temp_files.append(video_blank_transparent)
+
+                    video_blank_preview = os.path.join(temp_dir, "segment_preview_blank.mp4")
+                    self._create_video_only_segment(blank_preview_path, video_blank_preview, first_start, fps, transparent=False)
+                    segment_videos_preview.append(video_blank_preview)
+                    temp_files.append(video_blank_preview)
+                else:
+                    blank_img = self._create_text_image("", width, height, transparent=False)
+                    blank_img_path = os.path.join(temp_dir, "frame_blank.png")
+                    blank_img.save(blank_img_path)
+                    temp_files.append(blank_img_path)
+
+                    video_blank = os.path.join(temp_dir, "segment_blank.mp4")
+                    self._create_video_only_segment(blank_img_path, video_blank, first_start, fps, transparent=False)
+                    segment_videos_transparent.append(video_blank)
+                    temp_files.append(video_blank)
+
             # 各セグメントの映像のみを作成（音声なし）
             for i, seg in enumerate(segments):
                 clip_num = i + 1

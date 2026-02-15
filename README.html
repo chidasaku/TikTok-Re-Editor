@@ -382,12 +382,30 @@
                 <td>動画生成</td>
                 <td>https://ffmpeg.org/</td>
             </tr>
+            <tr>
+                <td><strong>VOICEVOX</strong></td>
+                <td>音声生成（テキスト読み上げ）</td>
+                <td><a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a></td>
+            </tr>
         </table>
 
         <div class="note">
             <div class="note-title">ポイント</div>
             Python・FFmpegはインストールスクリプトの実行時に自動でインストールされるため、手動でのインストールは不要です。
         </div>
+
+        <h3>VOICEVOXのインストール</h3>
+        <p>VOICEVOXは、テキストから音声を生成するための無料ソフトです。以下の手順でインストールしてください。</p>
+        <ol>
+            <li><a href="https://voicevox.hiroshiba.jp/" target="_blank">VOICEVOXダウンロードページ</a>にアクセスします</li>
+            <li>お使いのOSに合わせてインストーラーをダウンロードします
+                <ul>
+                    <li><strong>Windows</strong>: ダウンロードしたインストーラー（.exe）を実行し、画面の指示に従ってインストール</li>
+                    <li><strong>Mac</strong>: ダウンロードしたファイル（.dmg）を開き、VOICEVOXをアプリケーションフォルダにドラッグ&ドロップ</li>
+                </ul>
+            </li>
+            <li>インストール完了後、VOICEVOXを起動して正常に動作することを確認してください</li>
+        </ol>
 
         <h3>APIキー</h3>
         <table>
@@ -661,6 +679,29 @@
 
             <div class="step">
                 <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>VOICEVOXで音声データを作成する</h4>
+                    <p>ステップ③で<strong>「DOWNLOAD TEXT」</strong>からダウンロードした整形済みテキストを使って、VOICEVOXで音声を生成します。</p>
+                    <ol>
+                        <li><strong>VOICEVOXアプリを起動</strong>します</li>
+                        <li>ダウンロードした整形済みテキストの内容をVOICEVOXに貼り付けます</li>
+                        <li>お好みのキャラクター（話者）を選択します</li>
+                        <li>読み上げ内容を確認し、必要に応じてアクセントや読みを調整します</li>
+                        <li><strong>「ファイル」→「音声をつなげて書き出し」</strong>を選択し、1つのWAVファイルとして保存します</li>
+                    </ol>
+                    <div class="important">
+                        <div class="note-title">重要</div>
+                        「ひらがな」テキストではなく、<strong>整形済みテキスト（動画表示用）</strong>を使用してください。VOICEVOXが自動で読みを判定します。
+                    </div>
+                    <div class="note">
+                        <div class="note-title">ポイント</div>
+                        生成した音声ファイルは、次のステップで「音声アップロード」機能を使ってアプリに読み込ませることができます。
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
                 <div class="step-content">
                     <h4>動画を生成してダウンロードする</h4>
                     <ol>
