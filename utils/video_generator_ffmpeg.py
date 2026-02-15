@@ -1,9 +1,20 @@
 import os
 import platform
+import shutil
 import subprocess
 import tempfile
 from PIL import Image, ImageDraw, ImageFont
 from utils.voicevox import VoiceVoxAPI
+
+# ffmpegがPATHにない場合、imageio-ffmpegのバンドル版を使用
+if not shutil.which('ffmpeg'):
+    try:
+        import imageio_ffmpeg
+        _ffmpeg_dir = os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
+        os.environ['PATH'] = _ffmpeg_dir + os.pathsep + os.environ.get('PATH', '')
+        print(f"[INFO] imageio-ffmpegのffmpegを使用: {_ffmpeg_dir}")
+    except ImportError:
+        print("[WARNING] ffmpegが見つかりません。imageio-ffmpegもインストールされていません。")
 
 
 class VideoGeneratorFFmpeg:
@@ -333,7 +344,6 @@ class VideoGeneratorFFmpeg:
 
     def _get_audio_duration(self, audio_path: str) -> float:
         """音声ファイルの長さを取得（ffprobe優先、なければffmpegで取得）"""
-        import shutil
         if shutil.which('ffprobe'):
             result = subprocess.run(
                 ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
