@@ -8,41 +8,21 @@ from PIL import Image, ImageDraw, ImageFont
 from utils.voicevox import VoiceVoxAPI
 
 
-def _find_ffmpeg():
-    """ffmpegバイナリの絶対パスを取得"""
-    path = shutil.which('ffmpeg')
+def _find_binary(name):
+    """バイナリの絶対パスを取得（shutil.which + 固定パス検索）"""
+    path = shutil.which(name)
     if path:
         return path
-    try:
-        import imageio_ffmpeg
-        return imageio_ffmpeg.get_ffmpeg_exe()
-    except Exception:
-        return 'ffmpeg'
-
-
-def _find_ffprobe():
-    """ffprobeバイナリの絶対パスを取得"""
-    path = shutil.which('ffprobe')
-    if path:
-        return path
-    try:
-        ffmpeg = FFMPEG_BIN
-        ffprobe_candidate = os.path.join(os.path.dirname(ffmpeg), 'ffprobe')
-        if os.path.isfile(ffprobe_candidate):
-            return ffprobe_candidate
-    except Exception:
-        pass
+    # Streamlit Cloud等でPATHに含まれない場合の固定パス候補
+    for candidate in [f'/usr/bin/{name}', f'/usr/local/bin/{name}', f'/snap/bin/{name}']:
+        if os.path.isfile(candidate):
+            return candidate
     return None
 
 
-try:
-    FFMPEG_BIN = _find_ffmpeg()
-    FFPROBE_BIN = _find_ffprobe()
-    print(f"[INFO] ffmpeg: {FFMPEG_BIN}, ffprobe: {FFPROBE_BIN}")
-except Exception as e:
-    FFMPEG_BIN = 'ffmpeg'
-    FFPROBE_BIN = None
-    print(f"[WARNING] ffmpeg検出でエラー: {e}")
+FFMPEG_BIN = _find_binary('ffmpeg') or 'ffmpeg'
+FFPROBE_BIN = _find_binary('ffprobe')
+print(f"[INFO] ffmpeg: {FFMPEG_BIN}, ffprobe: {FFPROBE_BIN}")
 
 
 class VideoGeneratorFFmpeg:
