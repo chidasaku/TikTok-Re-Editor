@@ -74,6 +74,7 @@ class VideoGeneratorFFmpeg:
     def _create_text_image(self, text: str, width: int, height: int, font_size: int = 100, transparent: bool = False, checker: bool = False) -> Image.Image:
         """縦書きテキスト画像を生成"""
         # OS別にフォントを読み込み
+        import glob as _glob
         font = None
         if platform.system() == "Darwin":
             # macOS → ヒラギノ角ゴシック
@@ -84,6 +85,7 @@ class VideoGeneratorFFmpeg:
             ]
         elif platform.system() == "Linux":
             # Linux (Streamlit Cloud等) → Noto Sans CJK
+            # 固定パス候補
             font_paths = [
                 "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
                 "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
@@ -94,6 +96,16 @@ class VideoGeneratorFFmpeg:
                 "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Bold.otf",
                 "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Regular.otf",
             ]
+            # glob検索で見つかるCJKフォントも追加
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Bold*.ttc", recursive=True))
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Regular*.ttc", recursive=True))
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Bold*.otf", recursive=True))
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/NotoSansCJK*Regular*.otf", recursive=True))
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/*CJK*.ttc", recursive=True))
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/*CJK*.otf", recursive=True))
+            # DejaVu等の汎用フォントもフォールバック候補に
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/DejaVuSans-Bold.ttf", recursive=True))
+            font_paths.extend(_glob.glob("/usr/share/fonts/**/DejaVuSans.ttf", recursive=True))
         else:
             # Windows → 游ゴシック
             font_paths = [
@@ -104,10 +116,12 @@ class VideoGeneratorFFmpeg:
         for font_path in font_paths:
             try:
                 font = ImageFont.truetype(font_path, font_size)
+                print(f"[INFO] フォント読み込み成功: {font_path}")
                 break
             except:
                 continue
         if font is None:
+            print(f"[WARNING] CJKフォントが見つかりません。検索パス: {font_paths[:10]}...")
             font = ImageFont.load_default()
 
         # 固定の文字送り（通常）
