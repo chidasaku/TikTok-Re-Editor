@@ -9,14 +9,30 @@ from utils.voicevox import VoiceVoxAPI
 
 
 def _find_binary(name):
-    """バイナリの絶対パスを取得（shutil.which + 固定パス検索）"""
+    """バイナリの絶対パスを取得"""
+    # 1. shutil.which
     path = shutil.which(name)
     if path:
         return path
-    # Streamlit Cloud等でPATHに含まれない場合の固定パス候補
+    # 2. 固定パス候補
     for candidate in [f'/usr/bin/{name}', f'/usr/local/bin/{name}', f'/snap/bin/{name}']:
         if os.path.isfile(candidate):
             return candidate
+    # 3. imageio-ffmpeg（ffmpegのみ）
+    if name == 'ffmpeg':
+        try:
+            import imageio_ffmpeg
+            return imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            pass
+    # 4. imageio-ffmpegのffmpegと同じディレクトリ
+    if name == 'ffprobe' and FFMPEG_BIN:
+        try:
+            candidate = os.path.join(os.path.dirname(FFMPEG_BIN), 'ffprobe')
+            if os.path.isfile(candidate):
+                return candidate
+        except Exception:
+            pass
     return None
 
 
