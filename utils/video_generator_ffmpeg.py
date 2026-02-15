@@ -661,12 +661,12 @@ class VideoGeneratorFFmpeg:
             if first_start > 0.05:
                 print(f"先頭の無音区間 ({first_start:.2f}s) に空白フレームを挿入します")
                 if transparent:
-                    blank_transparent = self._create_text_image("", width, height, transparent=True)
+                    blank_transparent = Image.new('RGBA', (width, height), (0, 0, 0, 0))
                     blank_transparent_path = os.path.join(temp_dir, "frame_transparent_blank.png")
                     blank_transparent.save(blank_transparent_path)
                     temp_files.append(blank_transparent_path)
 
-                    blank_preview = self._create_text_image("", width, height, checker=True)
+                    blank_preview = self._create_checker_background(width, height)
                     blank_preview_path = os.path.join(temp_dir, "frame_preview_blank.png")
                     blank_preview.save(blank_preview_path)
                     temp_files.append(blank_preview_path)
@@ -681,7 +681,7 @@ class VideoGeneratorFFmpeg:
                     segment_videos_preview.append(video_blank_preview)
                     temp_files.append(video_blank_preview)
                 else:
-                    blank_img = self._create_text_image("", width, height, transparent=False)
+                    blank_img = Image.new('RGB', (width, height), self.background_color)
                     blank_img_path = os.path.join(temp_dir, "frame_blank.png")
                     blank_img.save(blank_img_path)
                     temp_files.append(blank_img_path)
