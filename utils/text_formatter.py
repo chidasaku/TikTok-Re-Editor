@@ -1,28 +1,19 @@
-import google.generativeai as genai
+from google import genai
 from typing import Optional
 
 
 class GeminiFormatter:
     def __init__(self, api_key: str):
-        genai.configure(api_key=api_key)
-        # 2026年1月時点の無料モデル（優先順）
+        self.client = genai.Client(api_key=api_key)
+        # 2026年2月時点の無料モデル（優先順）
         self.models_to_try = [
             'gemini-2.5-flash',
             'gemini-2.5-flash-lite',
             'gemini-2.5-pro',
             'gemini-2.0-flash',
         ]
-        self.model = None
-        for model_name in self.models_to_try:
-            try:
-                self.model = genai.GenerativeModel(model_name)
-                print(f"Gemini初期化成功: {model_name}")
-                break
-            except Exception as e:
-                print(f"Gemini初期化失敗 {model_name}: {e}")
-                continue
-        if self.model is None:
-            self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.default_model = 'gemini-2.5-flash'
+        print(f"Gemini Client初期化成功")
 
     def format_text(self, text: str) -> Optional[str]:
         """
@@ -69,9 +60,11 @@ class GeminiFormatter:
         # 複数モデルでリトライ
         for model_name in self.models_to_try:
             try:
-                model = genai.GenerativeModel(model_name)
                 print(f"Gemini APIリクエスト中... (モデル: {model_name}, テキスト長: {len(text)}文字)")
-                response = model.generate_content(prompt)
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
 
                 if hasattr(response, 'text') and response.text:
                     result = response.text.strip()
@@ -121,7 +114,10 @@ class GeminiFormatter:
 
         try:
             print(f"Gemini APIでファイル名生成中...")
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                    model=self.default_model,
+                    contents=prompt
+                )
             print(f"ファイル名生成レスポンス受信完了")
 
             if hasattr(response, 'text'):
@@ -189,7 +185,10 @@ class GeminiFormatter:
 
         try:
             print(f"Gemini APIでメタデータ生成中... (テキスト長: {len(text)}文字)")
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                    model=self.default_model,
+                    contents=prompt
+                )
             print(f"メタデータ生成レスポンス受信完了")
 
             if hasattr(response, 'text'):
@@ -285,7 +284,10 @@ class GeminiFormatter:
         try:
             nuance_desc = f"丁寧度={politeness}, 感情={emotion}, 話し方={style}"
             print(f"Gemini APIでニュアンス変更中... ({nuance_desc})")
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                    model=self.default_model,
+                    contents=prompt
+                )
             print(f"ニュアンス変更レスポンス受信完了")
 
             if hasattr(response, 'text'):
@@ -372,7 +374,10 @@ class GeminiFormatter:
 
         try:
             print(f"Gemini APIでひらがな変換中... (テキスト長: {len(text)}文字)")
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                    model=self.default_model,
+                    contents=prompt
+                )
             print(f"ひらがな変換レスポンス受信完了")
 
             if hasattr(response, 'text'):
