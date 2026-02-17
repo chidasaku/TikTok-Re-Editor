@@ -79,10 +79,10 @@ TikTok向けの透過動画を自動生成するWebアプリケーションで�
 ### 1. 必要なライブラリをインストール
 
 **Mac:**
-`インストール.command` をダブルクリック
+`install.command` をダブルクリック
 
 **Windows:**
-`インストール.bat` をダブルクリック
+`install.bat` をダブルクリック
 
 または手動で:
 ```bash
@@ -125,8 +125,8 @@ brew install ffmpeg
    - https://voicevox.hiroshiba.jp/
 
 2. **アプリを起動**
-   - Mac: `起動.command` をダブルクリック
-   - Windows: `起動.bat` をダブルクリック
+   - Mac: `start.command` をダブルクリック
+   - Windows: `start.bat` をダブルクリック
    - ブラウザで http://localhost:8501 が開きます
 
 3. **APIキーを設定**（初回のみ）
@@ -323,10 +323,10 @@ TikTok-Re-Editor-FFmpeg-v3/
 ├── .env.example       # APIキーのサンプル
 ├── README.md          # このファイル
 ├── README.html        # マニュアル（HTML版）
-├── 起動.command       # Mac用起動スクリプト
-├── 起動.bat           # Windows用起動スクリプト
-├── インストール.command # Mac用インストールスクリプト
-├── インストール.bat     # Windows用インストールスクリプト
+├── start.command       # Mac用起動スクリプト
+├── start.bat           # Windows用起動スクリプト
+├── install.command # Mac用インストールスクリプト
+├── install.bat     # Windows用インストールスクリプト
 └── utils/
     ├── transcription.py          # Gladia文字起こし
     ├── text_formatter.py         # Geminiテキスト整形・ひらがな変換

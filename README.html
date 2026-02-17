@@ -443,7 +443,7 @@
                     <p><strong>ダウンロードリンク</strong>: <a href="https://pjp6vm1896tv.jp.larksuite.com/drive/folder/HdEMfEuG0lDHOcdH53MjdJU9pze" target="_blank">https://pjp6vm1896tv.jp.larksuite.com/drive/folder/HdEMfEuG0lDHOcdH53MjdJU9pze</a></p>
                     <div class="note">
                         <div class="note-title">ポイント</div>
-                        このZIPファイルには、アプリ本体と自動セットアップスクリプトが含まれています。Python・FFmpegはインストールスクリプト（Windows: <code>インストール.bat</code> / Mac: <code>インストール.command</code>）の実行時に自動でインストールされます。
+                        このZIPファイルには、アプリ本体と自動セットアップスクリプトが含まれています。Python・FFmpegはインストールスクリプト（Windows: <code>install.bat</code> / Mac: <code>install.command</code>）の実行時に自動でインストールされます。
                     </div>
                 </div>
             </div>
@@ -476,7 +476,7 @@
                 <div class="step-content">
                     <h4>インストールスクリプトを実行する</h4>
                     <h4 style="font-size: 1em; margin: 15px 0 8px 0;">▼ Windowsの場合</h4>
-                    <p>展開したフォルダの中にある <code>インストール.bat</code> をダブルクリックしてください。</p>
+                    <p>展開したフォルダの中にある <code>install.bat</code> をダブルクリックしてください。</p>
                     <p>以下が<strong>自動的に</strong>行われます（インターネット接続が必要です）:</p>
                     <ol>
                         <li><strong>Python</strong> のダウンロードとセットアップ</li>
@@ -493,7 +493,7 @@
                         </ul>
                     </div>
                     <h4 style="font-size: 1em; margin: 15px 0 8px 0;">▼ Macの場合</h4>
-                    <p>展開したフォルダの中にある <code>インストール.command</code> をダブルクリックしてください。</p>
+                    <p>展開したフォルダの中にある <code>install.command</code> をダブルクリックしてください。</p>
                     <p>以下が<strong>自動的に</strong>行われます（インターネット接続が必要です）:</p>
                     <ol>
                         <li><strong>Homebrew</strong> のインストール（未インストールの場合）</li>
@@ -504,7 +504,7 @@
                     <div class="note">
                         <div class="note-title">ポイント</div>
                         <ul>
-                            <li>初回実行時に「"インストール.command"は開発元が未確認のため開けません」と表示された場合は、<strong>右クリック → 「開く」</strong>を選択してください</li>
+                            <li>初回実行時に「"install.command"は開発元が未確認のため開けません」と表示された場合は、<strong>右クリック → 「開く」</strong>を選択してください</li>
                             <li>Homebrewの初回インストールには数分かかる場合があります</li>
                             <li>途中でMacのパスワード入力を求められる場合があります</li>
                         </ul>
@@ -517,7 +517,7 @@
                 <div class="step-content">
                     <h4>アプリを起動する</h4>
                     <ol>
-                        <li>展開したフォルダの中にある <code>起動.bat</code>（Windows）または <code>起動.command</code>（Mac）を<strong>ダブルクリック</strong>します</li>
+                        <li>展開したフォルダの中にある <code>start.bat</code>（Windows）または <code>start.command</code>（Mac）を<strong>ダブルクリック</strong>します</li>
                         <li>自動的にブラウザが開き、アプリが表示されます</li>
                     </ol>
                 </div>
@@ -729,7 +729,7 @@
                 <div class="step-content">
                     <h4>準備</h4>
                     <ol>
-                        <li><strong>アプリを起動</strong> - Mac: <code>起動.command</code> / Windows: <code>起動.bat</code> をダブルクリック</li>
+                        <li><strong>アプリを起動</strong> - Mac: <code>start.command</code> / Windows: <code>start.bat</code> をダブルクリック</li>
                         <li><strong>APIキーを設定</strong>（初回のみ）- 画面上部の「API設定」からGladia・Gemini APIキーを入力</li>
                     </ol>
                 </div>
@@ -852,21 +852,21 @@
                 <p>FFmpegが正しくインストールされていない可能性があります。以下の手順で確認してください。</p>
                 <h4 style="font-size: 0.95em; margin: 10px 0 5px 0;">▼ Windowsの場合</h4>
                 <ol>
-                    <li>まず<strong>「インストール.bat」を再度実行</strong>してください。FFmpegが未インストールの場合は自動でダウンロードされます</li>
+                    <li>まず<strong>「install.bat」を再度実行</strong>してください。FFmpegが未インストールの場合は自動でダウンロードされます</li>
                     <li>それでも解決しない場合は、以下の手順でFFmpegの状態を確認します:
                         <ul>
                             <li>展開したフォルダの中に <code>ffmpeg</code> フォルダがあるか確認してください</li>
                             <li><code>ffmpeg</code> フォルダの中に <code>ffmpeg.exe</code> と <code>ffprobe.exe</code> の2つのファイルがあるか確認してください</li>
-                            <li>ファイルが無い場合は、インターネット接続を確認してから「インストール.bat」を再実行してください</li>
+                            <li>ファイルが無い場合は、インターネット接続を確認してから「install.bat」を再実行してください</li>
                         </ul>
                     </li>
-                    <li>上記を確認しても動画が生成されない場合は、<strong>アプリを一度閉じて「起動.bat」で再起動</strong>してみてください</li>
+                    <li>上記を確認しても動画が生成されない場合は、<strong>アプリを一度閉じて「start.bat」で再起動</strong>してみてください</li>
                 </ol>
                 <h4 style="font-size: 0.95em; margin: 10px 0 5px 0;">▼ Macの場合</h4>
                 <ol>
                     <li>ターミナルで <code>ffmpeg -version</code> を実行して、FFmpegがインストールされているか確認してください</li>
-                    <li>インストールされていない場合は、<strong>「インストール.command」を再度実行</strong>するか、ターミナルで <code>brew install ffmpeg</code> を実行してください</li>
-                    <li>上記を確認しても動画が生成されない場合は、<strong>アプリを一度閉じて「起動.command」で再起動</strong>してみてください</li>
+                    <li>インストールされていない場合は、<strong>「install.command」を再度実行</strong>するか、ターミナルで <code>brew install ffmpeg</code> を実行してください</li>
+                    <li>上記を確認しても動画が生成されない場合は、<strong>アプリを一度閉じて「start.command」で再起動</strong>してみてください</li>
                 </ol>
             </div>
             <div class="troubleshoot-item">

@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 > nul
 cd /d "%~dp0"
 
@@ -23,7 +23,7 @@ if exist "python_embedded\python.exe" (
     python --version > nul 2>&1
     if %errorlevel% neq 0 (
         echo エラー: Pythonが見つかりません
-        echo 「インストール.bat」を先に実行してください
+        echo 「install.bat」を先に実行してください
         echo.
         pause
         exit /b 1
@@ -41,7 +41,7 @@ if %errorlevel% neq 0 (
     echo ======================================
     echo.
     echo 以下を確認してください:
-    echo 1. 「インストール.bat」を実行しましたか？
+    echo 1. 「install.bat」を実行しましたか？
     echo.
 )
 

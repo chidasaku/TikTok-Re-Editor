@@ -1086,7 +1086,8 @@ if st.session_state.formatted_text:
                         hiragana_result = gemini.convert_to_hiragana(st.session_state.text_editor)
                         if hiragana_result:
                             st.session_state.hiragana_text = hiragana_result
-                            st.session_state.hiragana_editor = hiragana_result
+                            if "hiragana_editor" in st.session_state:
+                                del st.session_state.hiragana_editor
                             st.rerun()
                         else:
                             st.error("変換失敗")
@@ -1101,7 +1102,8 @@ if st.session_state.formatted_text:
                         hiragana_result = gemini.convert_to_hiragana(st.session_state.text_editor)
                         if hiragana_result:
                             st.session_state.hiragana_text = hiragana_result
-                            st.session_state.hiragana_editor = hiragana_result
+                            if "hiragana_editor" in st.session_state:
+                                del st.session_state.hiragana_editor
                             st.rerun()
                         else:
                             st.error("ひらがな変換に失敗しました")
