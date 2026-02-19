@@ -55,6 +55,38 @@ class VideoGeneratorFFmpeg:
         self.background_color = background_color
         self.voicevox = VoiceVoxAPI(voicevox_url)
 
+    @staticmethod
+    def get_current_font_info():
+        """現在使用されるフォント名とパスを返す"""
+        bundled_font = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fonts', 'NotoSansJP-Bold.otf')
+        font_paths = [bundled_font]
+        if platform.system() == "Darwin":
+            font_paths.extend([
+                "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc",
+                "/System/Library/Fonts/ヒラギノ角ゴ ProN W6.otf",
+                "/System/Library/Fonts/Hiragino Sans GB.ttc",
+            ])
+        elif platform.system() == "Linux":
+            font_paths.extend([
+                "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+                "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+                "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Bold.otf",
+            ])
+        else:
+            font_paths.extend([
+                "C:/Windows/Fonts/YuGothB.ttc",
+                "C:/Windows/Fonts/YuGothM.ttc",
+                "C:/Windows/Fonts/meiryo.ttc",
+            ])
+        for font_path in font_paths:
+            try:
+                ImageFont.truetype(font_path, 10)
+                font_name = os.path.basename(font_path)
+                return {"name": font_name, "path": font_path, "size": 100}
+            except:
+                continue
+        return {"name": "デフォルトフォント", "path": None, "size": 100}
+
     def _create_checker_background(self, width: int, height: int, cell_size: int = 20) -> Image.Image:
         """チェッカーパターン背景を作成（Photoshop風透過表示）"""
         img = Image.new('RGB', (width, height))
