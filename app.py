@@ -948,6 +948,7 @@ with tab4:
             ''', unsafe_allow_html=True)
 
         st.info("プレビューはチェッカー背景で表示。ダウンロードは透過動画（MOV）です。")
+        st.caption(f"🔤 使用フォント: **{_font_info['name']}**（{_font_info['size']}px）")
 
         st.download_button(
             label="DOWNLOAD VIDEO (.mov)",
@@ -1285,6 +1286,7 @@ if st.session_state.formatted_text:
             ''', unsafe_allow_html=True)
 
         st.info("プレビューはチェッカー背景で表示。ダウンロードは透過動画（MOV）です。")
+        st.caption(f"🔤 使用フォント: **{_font_info['name']}**（{_font_info['size']}px）")
 
         st.download_button(
             label="DOWNLOAD VIDEO (.mov)",
