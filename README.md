@@ -413,3 +413,10 @@ MIT License
 - iPhone風プレビュー追加
 - ひらがな変換機能追加
 - UI改善（TikTokスタイル）
+
+---
+
+## 動作確認
+
+✅ Claude Code 動作確認済み（2026-02-22）
+このコメントはClaude Codeによって自動的に追加されました。Issue #2 のテストとして、`claude-fix` ラベルをトリガーにREADME.mdへの追記が正常に実行されました。
