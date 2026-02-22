@@ -24,8 +24,6 @@ utils/
   video_generator_ffmpeg.py  # FFmpeg動画生成（縦書きテキスト処理）
   voicevox.py           # VOICEVOX音声合成
 fonts/                  # CJKフォントバンドル
-install.bat / .command  # Windows/Mac インストーラー
-start.bat / .command    # Windows/Mac 起動スクリプト
 ```
 
 ## コーディング規約
